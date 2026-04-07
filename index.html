@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delhi PS-CRM — Admin Command Centre</title>
+  <meta name="description" content="Delhi PS-CRM civic grievance management command centre for department heads." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       DESIGN TOKENS
+    ═══════════════════════════════════════════════════════ */
+    :root {
+      --bg-primary:    #0d0f14;
+      --bg-secondary:  #13161d;
+      --bg-tertiary:   #1a1d26;
+      --bg-elevated:   #21242f;
+      --bg-hover:      #282c3a;
+
+      --border:        #2a2e3a;
+      --border-focus:  #4a5068;
+
+      --text-primary:  #e8e4dd;
+      --text-secondary:#9a9590;
+      --text-muted:    #605c57;
+
+      --accent-red:    #ff3b3b;
+      --accent-red-bg: rgba(255, 59, 59, 0.12);
+      --accent-amber:  #ffb020;
+      --accent-amber-bg: rgba(255, 176, 32, 0.12);
+      --accent-blue:   #3b82f6;
+      --accent-blue-bg: rgba(59, 130, 246, 0.12);
+      --accent-green:  #22c55e;
+      --accent-green-bg: rgba(34, 197, 94, 0.12);
+      --accent-gray:   #6b7280;
+      --accent-gray-bg: rgba(107, 114, 128, 0.12);
+
+      --font-display: 'Barlow Condensed', sans-serif;
+      --font-mono:    'JetBrains Mono', monospace;
+
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 10px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-mono);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════════════════ */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--accent-amber), var(--accent-red));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--bg-primary);
+      letter-spacing: -1px;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .live-label {
+      font-size: 11px;
+      color: var(--accent-green);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .header-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-left: 16px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STATS BAR
+    ═══════════════════════════════════════════════════════ */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      padding: 20px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .stat-card[data-stat="total"]::before     { background: var(--text-secondary); }
+    .stat-card[data-stat="open"]::before      { background: var(--text-primary); }
+    .stat-card[data-stat="assigned"]::before   { background: var(--accent-amber); }
+    .stat-card[data-stat="resolved"]::before   { background: var(--accent-green); }
+    .stat-card[data-stat="critical"]::before   { background: var(--accent-red); }
+
+    .stat-label {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 44px;
+      font-weight: 800;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      transition: color 0.3s;
+    }
+
+    .stat-card[data-stat="total"]   .stat-value { color: var(--text-primary); }
+    .stat-card[data-stat="open"]    .stat-value { color: var(--text-primary); }
+    .stat-card[data-stat="assigned"].stat-value { color: var(--accent-amber); }
+    .stat-card[data-stat="resolved"].stat-value { color: var(--accent-green); }
+    .stat-card[data-stat="critical"].stat-value { color: var(--accent-red); }
+
+    /* value pop animation */
+    @keyframes value-pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    .stat-value.pop { animation: value-pop 0.4s ease; }
+
+    /* ═══════════════════════════════════════════════════════
+       FILTERS
+    ═══════════════════════════════════════════════════════ */
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 28px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .filter-select, .filter-search {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus, .filter-search:focus {
+      border-color: var(--border-focus);
+    }
+
+    .filter-select option {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .filter-search {
+      width: 260px;
+    }
+
+    .filter-search::placeholder {
+      color: var(--text-muted);
+    }
+
+    .filter-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    .filter-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .filter-count span {
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       TABLE
+    ═══════════════════════════════════════════════════════ */
+    .table-wrapper {
+      overflow-x: auto;
+      padding: 0 28px 28px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1100px;
+    }
+
+    thead th {
+      font-family: var(--font-display);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 14px 12px 10px;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      background: var(--bg-primary);
+      z-index: 1;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover {
+      background: var(--bg-hover);
+    }
+
+    tbody td {
+      padding: 12px;
+      font-size: 12px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .col-ticket {
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+    }
+
+    .col-category {
+      color: var(--text-secondary);
+    }
+
+    .col-location {
+      color: var(--text-secondary);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .col-summary {
+      color: var(--text-primary);
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .col-citizen {
+      color: var(--text-secondary);
+    }
+
+    .col-time {
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      font-size: 11px;
+    }
+
+    /* pills */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .pill-led {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* urgency pills */
+    .pill-critical { background: var(--accent-red-bg); color: var(--accent-red); }
+    .pill-critical .pill-led { background: var(--accent-red); box-shadow: 0 0 6px var(--accent-red); }
+
+    .pill-high { background: var(--accent-amber-bg); color: var(--accent-amber); }
+    .pill-high .pill-led { background: var(--accent-amber); box-shadow: 0 0 6px var(--accent-amber); }
+
+    .pill-medium { background: var(--accent-blue-bg); color: var(--accent-blue); }
+    .pill-medium .pill-led { background: var(--accent-blue); box-shadow: 0 0 6px var(--accent-blue); }
+
+    .pill-low { background: var(--accent-gray-bg); color: var(--accent-gray); }
+    .pill-low .pill-led { background: var(--accent-gray); }
+
+    /* status pills */
+    .pill-open {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--text-muted);
+    }
+    .pill-open .pill-led { background: var(--text-primary); }
+
+    .pill-assigned { background: var(--accent-amber-bg); color: var(--accent-amber); }
+    .pill-assigned .pill-led { background: var(--accent-amber); box-shadow: 0 0 6px var(--accent-amber); }
+
+    .pill-resolved { background: var(--accent-green-bg); color: var(--accent-green); }
+    .pill-resolved .pill-led { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+
+    /* actions */
+    .btn {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-focus);
+      color: var(--text-primary);
+    }
+
+    .btn-assign {
+      border-color: var(--accent-amber);
+      color: var(--accent-amber);
+    }
+    .btn-assign:hover {
+      background: var(--accent-amber-bg);
+      border-color: var(--accent-amber);
+    }
+
+    .btn-resolve {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+    .btn-resolve:hover {
+      background: var(--accent-green-bg);
+      border-color: var(--accent-green);
+    }
+
+    .btn-primary {
+      background: var(--accent-amber);
+      color: var(--bg-primary);
+      border-color: var(--accent-amber);
+      font-weight: 700;
+    }
+    .btn-primary:hover {
+      background: #e69d1a;
+    }
+
+    .btn-primary-green {
+      background: var(--accent-green);
+      color: var(--bg-primary);
+      border-color: var(--accent-green);
+      font-weight: 700;
+    }
+    .btn-primary-green:hover {
+      background: #1aad50;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* row flash animation for new inserts */
+    @keyframes row-flash {
+      0%   { background: rgba(255, 176, 32, 0.15); }
+      100% { background: transparent; }
+    }
+
+    .row-new {
+      animation: row-flash 2s ease-out;
+    }
+
+    /* empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .empty-state-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: 0.3;
+    }
+
+    /* loading */
+    .loading-bar {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-amber), transparent);
+      animation: loading-slide 1.2s ease-in-out infinite;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+    }
+
+    @keyframes loading-slide {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       MODAL
+    ═══════════════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 520px;
+      max-width: 92vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: scale(0.95) translateY(10px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .modal-close {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+
+    .modal-close:hover {
+      border-color: var(--border-focus);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+    }
+
+    .modal-detail-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px 16px;
+      margin-bottom: 20px;
+      font-size: 12px;
+    }
+
+    .modal-detail-label {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 10px;
+      align-self: center;
+    }
+
+    .modal-detail-value {
+      color: var(--text-primary);
+    }
+
+    .modal-field {
+      margin-bottom: 16px;
+    }
+
+    .modal-field label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .modal-field select,
+    .modal-field textarea {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+
+    .modal-field select:focus,
+    .modal-field textarea:focus {
+      border-color: var(--border-focus);
+    }
+
+    .modal-field textarea {
+      min-height: 100px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 24px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .modal-field .error-text {
+      color: var(--accent-red);
+      font-size: 11px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-focus); }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .stats-bar {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .header { padding: 12px 16px; }
+      .filters-bar { padding: 12px 16px; }
+      .table-wrapper { padding: 0 16px 16px; }
+      .filter-search { width: 180px; }
+    }
+
+    @media (max-width: 600px) {
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .stat-value { font-size: 32px; }
+      .header-title { font-size: 16px; }
+      .filter-search { width: 140px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loading-bar" id="loadingBar"></div>
+
+  <!-- ═══════ HEADER ═══════ -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-logo">PS</div>
+      <div>
+        <div class="header-title">Delhi PS-CRM</div>
+        <div class="header-subtitle">Civic Grievance Command Centre</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-dot"></div>
+      <span class="live-label">Live</span>
+      <span class="header-time" id="headerTime"></span>
+    </div>
+  </header>
+
+  <!-- ═══════ STATS ═══════ -->
+  <section class="stats-bar" id="statsBar">
+    <div class="stat-card" data-stat="total">
+      <div class="stat-label">Total</div>
+      <div class="stat-value" id="statTotal">—</div>
+    </div>
+    <div class="stat-card" data-stat="open">
+      <div class="stat-label">Open</div>
+      <div class="stat-value" id="statOpen">—</div>
+    </div>
+    <div class="stat-card" data-stat="assigned">
+      <div class="stat-label">Assigned</div>
+      <div class="stat-value" id="statAssigned">—</div>
+    </div>
+    <div class="stat-card" data-stat="resolved">
+      <div class="stat-label">Resolved</div>
+      <div class="stat-value" id="statResolved">—</div>
+    </div>
+    <div class="stat-card" data-stat="critical">
+      <div class="stat-label">Critical</div>
+      <div class="stat-value" id="statCritical">—</div>
+    </div>
+  </section>
+
+  <!-- ═══════ FILTERS ═══════ -->
+  <section class="filters-bar">
+    <div class="filter-group">
+      <span class="filter-label">Status</span>
+      <select class="filter-select" id="filterStatus">
+        <option value="all">All</option>
+        <option value="open">Open</option>
+        <option value="assigned">Assigned</option>
+        <option value="resolved">Resolved</option>
+      </select>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="filter-group">
+      <span class="filter-label">Category</span>
+      <select class="filter-select" id="filterCategory">
+        <option value="all">All</option>
+        <option value="Waste Management">Waste Management</option>
+        <option value="Water Supply">Water Supply</option>
+        <option value="Roads">Roads</option>
+        <option value="Sewage & Drainage">Sewage &amp; Drainage</option>
+        <option value="Electricity">Electricity</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="filter-group">
+      <span class="filter-label">Urgency</span>
+      <select class="filter-select" id="filterUrgency">
+        <option value="all">All</option>
+        <option value="Critical">Critical</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="filter-group">
+      <span class="filter-label">Search</span>
+      <input type="text" class="filter-search" id="filterSearch" placeholder="Ticket ID, location, or summary…" />
+    </div>
+    <div class="filter-count" id="filterCount">Showing <span>0</span> of <span>0</span></div>
+  </section>
+
+  <!-- ═══════ TABLE ═══════ -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket ID</th>
+          <th>Category</th>
+          <th>Urgency</th>
+          <th>Location</th>
+          <th>Summary</th>
+          <th>Citizen</th>
+          <th>Status</th>
+          <th>Filed At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="complaintsBody">
+      </tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-state-icon">⊘</div>
+      No complaints match your filters.
+    </div>
+  </div>
+
+  <!-- ═══════ ASSIGN MODAL ═══════ -->
+  <div class="modal-overlay" id="assignModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Assign Officer</span>
+        <button class="modal-close" id="assignModalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-detail-grid" id="assignDetails"></div>
+        <div class="modal-field">
+          <label for="officerSelect">Assign To</label>
+          <select id="officerSelect">
+            <option value="">— Select Officer —</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-cancel" id="assignCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="assignConfirmBtn">Confirm Assignment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ RESOLVE MODAL ═══════ -->
+  <div class="modal-overlay" id="resolveModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Resolve Complaint</span>
+        <button class="modal-close" id="resolveModalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-detail-grid" id="resolveDetails"></div>
+        <div class="modal-field">
+          <label for="officerNotes">Officer Notes</label>
+          <textarea id="officerNotes" placeholder="Describe the resolution…"></textarea>
+          <div class="error-text" id="notesError">Notes are required to resolve a complaint.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-cancel" id="resolveCancelBtn">Cancel</button>
+        <button class="btn btn-primary-green" id="resolveConfirmBtn">Mark Resolved</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════ SUPABASE SDK ═══════ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════
+       CONFIG
+    ═══════════════════════════════════════════════════════ */
+    const SUPABASE_URL  = 'https://yzxbozhbdmmubaqdgtql.supabase.co';
+    const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6eGJvemhiZG1tdWJhcWRndHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjA2NTksImV4cCI6MjA5MDE5NjY1OX0.E9RMgRkyaUO0P98doErMjYKY3eE7fZ3TEwAheBY4bb8';
+
+    const { createClient } = window.supabase;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    /* ═══════════════════════════════════════════════════════
+       OFFICERS MAP
+    ═══════════════════════════════════════════════════════ */
+    const OFFICERS = {
+      'Waste Management':   ['Saksham Gupta', 'Priya Mehta', 'Rajesh Kumar', 'Deepak Sharma'],
+      'Water Supply':       ['Ritika Singh', 'Amit Verma', 'Sunita Rao', 'Vikram Nair'],
+      'Roads':              ['Ridhima Aggarwal', 'Manish Tiwari', 'Kavita Joshi', 'Suresh Pandey'],
+      'Sewage & Drainage':  ['Gaurav Yadav', 'Neha Gupta', 'Ravi Shankar', 'Pooja Mishra'],
+      'Electricity':        ['Eon Aether', 'Rohit Kapoor', 'Ananya Singh', 'Karan Malhotra'],
+      'Other':              ['Priya Mehta', 'Amit Verma'],
+    };
+
+    /* ═══════════════════════════════════════════════════════
+       STATE
+    ═══════════════════════════════════════════════════════ */
+    let allComplaints = [];
+    let usersMap = {};  // whatsapp_number -> name
+    let activeComplaint = null;
+
+    /* ═══════════════════════════════════════════════════════
+       DOM REFS
+    ═══════════════════════════════════════════════════════ */
+    const $ = (s) => document.querySelector(s);
+    const loadingBar     = $('#loadingBar');
+    const complaintsBody = $('#complaintsBody');
+    const emptyState     = $('#emptyState');
+
+    const filterStatus   = $('#filterStatus');
+    const filterCategory = $('#filterCategory');
+    const filterUrgency  = $('#filterUrgency');
+    const filterSearch   = $('#filterSearch');
+    const filterCount    = $('#filterCount');
+
+    const assignModal       = $('#assignModal');
+    const assignDetails     = $('#assignDetails');
+    const officerSelect     = $('#officerSelect');
+    const assignConfirmBtn  = $('#assignConfirmBtn');
+
+    const resolveModal      = $('#resolveModal');
+    const resolveDetails    = $('#resolveDetails');
+    const officerNotes      = $('#officerNotes');
+    const notesError        = $('#notesError');
+    const resolveConfirmBtn = $('#resolveConfirmBtn');
+
+    /* ═══════════════════════════════════════════════════════
+       UTILITIES
+    ═══════════════════════════════════════════════════════ */
+    function ticketId(uuid) {
+      return uuid.substring(0, 8).toUpperCase();
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const day   = String(d.getDate()).padStart(2, '0');
+      const mon   = months[d.getMonth()];
+      const year  = d.getFullYear();
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins  = String(d.getMinutes()).padStart(2, '0');
+      return `${day} ${mon} ${year}, ${hours}:${mins}`;
+    }
+
+    function urgencyClass(u) {
+      return 'pill-' + (u || 'low').toLowerCase();
+    }
+
+    function statusClass(s) {
+      return 'pill-' + (s || 'open').toLowerCase();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       HEADER CLOCK
+    ═══════════════════════════════════════════════════════ */
+    function updateClock() {
+      const now = new Date();
+      const opts = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      $('#headerTime').textContent = now.toLocaleDateString('en-IN', opts).replace(/,/g, ' ·');
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    /* ═══════════════════════════════════════════════════════
+       STATS
+    ═══════════════════════════════════════════════════════ */
+    function updateStats() {
+      const total    = allComplaints.length;
+      const open     = allComplaints.filter(c => c.status === 'open').length;
+      const assigned = allComplaints.filter(c => c.status === 'assigned').length;
+      const resolved = allComplaints.filter(c => c.status === 'resolved').length;
+      const critical = allComplaints.filter(c => (c.urgency || '').toLowerCase() === 'critical').length;
+
+      animateStat('statTotal',    total);
+      animateStat('statOpen',     open);
+      animateStat('statAssigned', assigned);
+      animateStat('statResolved', resolved);
+      animateStat('statCritical', critical);
+    }
+
+    function animateStat(id, value) {
+      const el = document.getElementById(id);
+      const prev = el.textContent;
+      el.textContent = value;
+      if (prev !== '—' && prev !== String(value)) {
+        el.classList.remove('pop');
+        void el.offsetWidth; // reflow
+        el.classList.add('pop');
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       FILTERING
+    ═══════════════════════════════════════════════════════ */
+    function getFilteredComplaints() {
+      const status   = filterStatus.value;
+      const category = filterCategory.value;
+      const urgency  = filterUrgency.value;
+      const search   = filterSearch.value.trim().toLowerCase();
+
+      return allComplaints.filter(c => {
+        if (status !== 'all' && c.status !== status) return false;
+        if (category !== 'all' && c.category !== category) return false;
+        if (urgency !== 'all' && c.urgency !== urgency) return false;
+        if (search) {
+          const tid = ticketId(c.id).toLowerCase();
+          const loc = (c.location || '').toLowerCase();
+          const sum = (c.summary || '').toLowerCase();
+          if (!tid.includes(search) && !loc.includes(search) && !sum.includes(search)) return false;
+        }
+        return true;
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RENDERING
+    ═══════════════════════════════════════════════════════ */
+    function renderTable(flashIds = []) {
+      const filtered = getFilteredComplaints();
+
+      // update count
+      const spans = filterCount.querySelectorAll('span');
+      spans[0].textContent = filtered.length;
+      spans[1].textContent = allComplaints.length;
+
+      if (filtered.length === 0) {
+        complaintsBody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      complaintsBody.innerHTML = filtered.map(c => {
+        const tid  = ticketId(c.id);
+        const uCls = urgencyClass(c.urgency);
+        const sCls = statusClass(c.status);
+        const name = usersMap[c.whatsapp_number] || c.whatsapp_number || '—';
+        const flash = flashIds.includes(c.id) ? ' class="row-new"' : '';
+
+        let actions = '';
+        if (c.status === 'open') {
+          actions = `<button class="btn btn-assign" onclick="openAssignModal('${c.id}')">Assign</button>`;
+        } else if (c.status === 'assigned') {
+          actions = `<button class="btn btn-resolve" onclick="openResolveModal('${c.id}')">Resolve</button>`;
+        } else {
+          actions = `<span style="color: var(--text-muted); font-size: 11px;">Done</span>`;
+        }
+
+        return `<tr${flash} data-id="${c.id}">
+          <td class="col-ticket">${escapeHtml(tid)}</td>
+          <td class="col-category">${escapeHtml(c.category || '—')}</td>
+          <td><span class="pill ${uCls}"><span class="pill-led"></span>${escapeHtml(c.urgency || 'Low')}</span></td>
+          <td class="col-location" title="${escapeHtml(c.location)}">${escapeHtml(c.location || '—')}</td>
+          <td class="col-summary" title="${escapeHtml(c.summary)}">${escapeHtml(c.summary || '—')}</td>
+          <td class="col-citizen">${escapeHtml(name)}</td>
+          <td><span class="pill ${sCls}"><span class="pill-led"></span>${escapeHtml(c.status || 'open')}</span></td>
+          <td class="col-time">${formatDate(c.timestamp)}</td>
+          <td class="actions-cell">${actions}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       FILTER LISTENERS
+    ═══════════════════════════════════════════════════════ */
+    filterStatus.addEventListener('change', () => renderTable());
+    filterCategory.addEventListener('change', () => renderTable());
+    filterUrgency.addEventListener('change', () => renderTable());
+
+    let searchDebounce;
+    filterSearch.addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => renderTable(), 200);
+    });
+
+    /* ═══════════════════════════════════════════════════════
+       ASSIGN MODAL
+    ═══════════════════════════════════════════════════════ */
+    function openAssignModal(id) {
+      activeComplaint = allComplaints.find(c => c.id === id);
+      if (!activeComplaint) return;
+
+      // populate details
+      assignDetails.innerHTML = detailGridHtml(activeComplaint);
+
+      // populate officers
+      const officers = OFFICERS[activeComplaint.category] || OFFICERS['Other'];
+      officerSelect.innerHTML = '<option value="">— Select Officer —</option>' +
+        officers.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+
+      assignModal.classList.add('active');
+    }
+
+    function closeAssignModal() {
+      assignModal.classList.remove('active');
+      activeComplaint = null;
+    }
+
+    $('#assignModalClose').addEventListener('click', closeAssignModal);
+    $('#assignCancelBtn').addEventListener('click', closeAssignModal);
+    assignModal.addEventListener('click', (e) => { if (e.target === assignModal) closeAssignModal(); });
+
+    assignConfirmBtn.addEventListener('click', async () => {
+      const officer = officerSelect.value;
+      if (!officer || !activeComplaint) return;
+
+      assignConfirmBtn.textContent = 'Assigning…';
+      assignConfirmBtn.disabled = true;
+
+      const { error } = await supabase
+        .from('raw_complaints')
+        .update({
+          status: 'assigned',
+          assigned_to: officer,
+          assigned_at: new Date().toISOString(),
+        })
+        .eq('id', activeComplaint.id);
+
+      if (error) {
+        console.error('Assign error:', error);
+        alert('Failed to assign. Check console.');
+      } else {
+        // locally update
+        const idx = allComplaints.findIndex(c => c.id === activeComplaint.id);
+        if (idx !== -1) {
+          allComplaints[idx].status = 'assigned';
+          allComplaints[idx].assigned_to = officer;
+          allComplaints[idx].assigned_at = new Date().toISOString();
+        }
+        updateStats();
+        renderTable();
+      }
+
+      assignConfirmBtn.textContent = 'Confirm Assignment';
+      assignConfirmBtn.disabled = false;
+      closeAssignModal();
+    });
+
+    /* ═══════════════════════════════════════════════════════
+       RESOLVE MODAL
+    ═══════════════════════════════════════════════════════ */
+    function openResolveModal(id) {
+      activeComplaint = allComplaints.find(c => c.id === id);
+      if (!activeComplaint) return;
+
+      resolveDetails.innerHTML = detailGridHtml(activeComplaint);
+      officerNotes.value = '';
+      notesError.style.display = 'none';
+      resolveModal.classList.add('active');
+    }
+
+    function closeResolveModal() {
+      resolveModal.classList.remove('active');
+      activeComplaint = null;
+    }
+
+    $('#resolveModalClose').addEventListener('click', closeResolveModal);
+    $('#resolveCancelBtn').addEventListener('click', closeResolveModal);
+    resolveModal.addEventListener('click', (e) => { if (e.target === resolveModal) closeResolveModal(); });
+
+    resolveConfirmBtn.addEventListener('click', async () => {
+      const notes = officerNotes.value.trim();
+      if (!notes) {
+        notesError.style.display = 'block';
+        officerNotes.focus();
+        return;
+      }
+      notesError.style.display = 'none';
+
+      if (!activeComplaint) return;
+
+      resolveConfirmBtn.textContent = 'Resolving…';
+      resolveConfirmBtn.disabled = true;
+
+      const { error } = await supabase
+        .from('raw_complaints')
+        .update({
+          status: 'resolved',
+          officer_notes: notes,
+          resolved_at: new Date().toISOString(),
+        })
+        .eq('id', activeComplaint.id);
+
+      if (error) {
+        console.error('Resolve error:', error);
+        alert('Failed to resolve. Check console.');
+      } else {
+        const idx = allComplaints.findIndex(c => c.id === activeComplaint.id);
+        if (idx !== -1) {
+          allComplaints[idx].status = 'resolved';
+          allComplaints[idx].officer_notes = notes;
+          allComplaints[idx].resolved_at = new Date().toISOString();
+        }
+        updateStats();
+        renderTable();
+      }
+
+      resolveConfirmBtn.textContent = 'Mark Resolved';
+      resolveConfirmBtn.disabled = false;
+      closeResolveModal();
+    });
+
+    /* ═══════════════════════════════════════════════════════
+       DETAIL GRID HTML
+    ═══════════════════════════════════════════════════════ */
+    function detailGridHtml(c) {
+      const name = usersMap[c.whatsapp_number] || c.whatsapp_number || '—';
+      return `
+        <span class="modal-detail-label">Ticket</span>
+        <span class="modal-detail-value" style="font-weight:700; letter-spacing:1px;">${escapeHtml(ticketId(c.id))}</span>
+        <span class="modal-detail-label">Category</span>
+        <span class="modal-detail-value">${escapeHtml(c.category || '—')}</span>
+        <span class="modal-detail-label">Urgency</span>
+        <span class="modal-detail-value"><span class="pill ${urgencyClass(c.urgency)}"><span class="pill-led"></span>${escapeHtml(c.urgency || 'Low')}</span></span>
+        <span class="modal-detail-label">Location</span>
+        <span class="modal-detail-value">${escapeHtml(c.location || '—')}</span>
+        <span class="modal-detail-label">Summary</span>
+        <span class="modal-detail-value" style="white-space: normal;">${escapeHtml(c.summary || '—')}</span>
+        <span class="modal-detail-label">Citizen</span>
+        <span class="modal-detail-value">${escapeHtml(name)}</span>
+        <span class="modal-detail-label">Filed</span>
+        <span class="modal-detail-value">${formatDate(c.timestamp)}</span>
+        ${c.assigned_to ? `
+        <span class="modal-detail-label">Assigned To</span>
+        <span class="modal-detail-value">${escapeHtml(c.assigned_to)}</span>` : ''}
+      `;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       INITIAL FETCH
+    ═══════════════════════════════════════════════════════ */
+    async function fetchUsers() {
+      const { data, error } = await supabase.from('users').select('whatsapp_number, name');
+      if (error) {
+        console.warn('Could not fetch users:', error);
+        return;
+      }
+      (data || []).forEach(u => {
+        usersMap[u.whatsapp_number] = u.name;
+      });
+    }
+
+    async function fetchComplaints() {
+      const { data, error } = await supabase
+        .from('raw_complaints')
+        .select('*')
+        .order('timestamp', { ascending: false });
+
+      if (error) {
+        console.error('Fetch complaints error:', error);
+        return;
+      }
+
+      allComplaints = data || [];
+      updateStats();
+      renderTable();
+    }
+
+    async function init() {
+      await fetchUsers();
+      await fetchComplaints();
+      loadingBar.style.display = 'none';
+      subscribeRealtime();
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       REALTIME SUBSCRIPTION
+    ═══════════════════════════════════════════════════════ */
+    function subscribeRealtime() {
+      supabase
+        .channel('raw_complaints_realtime')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'raw_complaints' },
+          (payload) => {
+            const newRow = payload.new;
+            // avoid duplicates
+            if (allComplaints.find(c => c.id === newRow.id)) return;
+            allComplaints.unshift(newRow);
+            updateStats();
+            renderTable([newRow.id]);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'raw_complaints' },
+          (payload) => {
+            const updated = payload.new;
+            const idx = allComplaints.findIndex(c => c.id === updated.id);
+            if (idx !== -1) {
+              allComplaints[idx] = { ...allComplaints[idx], ...updated };
+            }
+            updateStats();
+            renderTable([updated.id]);
+          }
+        )
+        .subscribe();
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BOOT
+    ═══════════════════════════════════════════════════════ */
+    init();
+  </script>
+</body>
+</html>
