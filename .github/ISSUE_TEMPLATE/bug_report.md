@@ -1,12 +1,12 @@
 ---
-name: 🐛 Bug Report
+name: Bug Report
 about: Report a bug or unexpected behavior in Delhi PS-CRM
 title: "[BUG] "
 labels: bug
 assignees: ''
 ---
 
-## 🐛 Bug Report
+## Bug Report
 
 ### Description
 <!-- A clear and concise description of what the bug is. -->
@@ -16,11 +16,11 @@ assignees: ''
 <!-- Check the relevant component(s). -->
 - [ ] WhatsApp Bot (n8n workflows)
 - [ ] AI Classification (OpenAI)
-- [ ] Dashboard — Complaints Tab
-- [ ] Dashboard — Analytics Tab
-- [ ] Dashboard — Map Tab
-- [ ] Dashboard — Board Tab
-- [ ] Dashboard — Scorecard Tab
+- [ ] Dashboard - Complaints Tab
+- [ ] Dashboard - Analytics Tab
+- [ ] Dashboard - Map Tab
+- [ ] Dashboard - Board Tab
+- [ ] Dashboard - Scorecard Tab
 - [ ] Supabase (Database / Realtime)
 - [ ] Other
 
@@ -50,7 +50,7 @@ assignees: ''
 - **Dashboard Version:** [e.g., commit hash or date]
 
 ### Console Errors
-<!-- If there are errors in the browser console (F12 → Console), paste them here. -->
+<!-- If there are errors in the browser console (F12 > Console), paste them here. -->
 ```
 <!-- Paste console errors here -->
 ```

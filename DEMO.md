@@ -1,324 +1,159 @@
-# 🎬 Demo Script — Delhi PS-CRM
+# Demo -- Delhi PS-CRM
 
-> **Presentation guide for Ministry officials and hackathon judges.**
-> Duration: ~10 minutes | Prepared for: India Innovates Finals, Bharat Mandapam
-
----
-
-## 📋 Pre-Demo Checklist
-
-- [ ] Dashboard open in browser (full screen, dark room preferred for maximum impact)
-- [ ] WhatsApp Business number ready on phone
-- [ ] A second phone for live demo (citizen POV)
-- [ ] Stable internet connection
-- [ ] Clear the browser console (no errors visible)
-- [ ] Ensure Supabase has some existing complaints for a populated dashboard
+This document walks through the end-to-end user experience of filing a civic complaint via WhatsApp.
 
 ---
 
-## 🎯 Opening Statement (30 seconds)
+## Prerequisites
 
-> *"20 million people live in Delhi. When a pipe bursts, a road caves in, or garbage piles up — how do they report it? They call a helpline that nobody answers. They file a form on a website they can't read. They download an app they'll never use again.*
+- The FastAPI backend is running and the WhatsApp webhook is connected to Meta
+- Supabase tables (`users`, `raw_complaints`) and storage bucket (`complaint-evidence`) are set up
+- The Gemini API key is configured
+
+---
+
+## Demo Flow
+
+### Step 1 -- New User Registration
+
+A citizen sends any message to the Delhi PS-CRM WhatsApp number for the first time.
+
+**System response:**
+> Welcome to Delhi PS-CRM! Please tell me your name.
+
+The citizen replies with their name (e.g., "Amit Kumar").
+
+**System response:**
+> Thanks Amit Kumar! You're registered. Reply NEW to file a complaint or STATUS to check existing ones.
+
+---
+
+### Step 2 -- Filing a Complaint
+
+The citizen sends **"new"** to start filing a complaint.
+
+**System response:**
+> Describe your issue
+
+The citizen describes their complaint in **Hindi or English** (or a mix):
+
+> "Rohini Sector 7 mein paani nahi aa raha hai teen din se. Bahut pareshani ho rahi hai."
+
+or
+
+> "There has been no water supply in Rohini Sector 7 for three days. Residents are frustrated."
+
+**Gemini AI** analyzes the text and responds with a structured summary:
+
+**System response:**
+> Thanks -- I've noted your complaint.
+> Category    : Water Supply
+> Urgency     : High
+> Location    : Rohini Sector 7
+> Ward        : Rohini West Ward
+> Summary     : No water supply in Rohini Sector 7 for three days.
 >
-> *What if they could just send a WhatsApp message — in Hindi — and the government actually listened?"*
+> Reply YES to submit, NO to cancel, or send a photo as evidence.
+
+**Note:** Gemini 2.0 Flash handles Hindi, English, and mixed-language (Hinglish) input naturally. No separate translation step is needed.
+
+---
+
+### Step 3 -- Attaching Photo Evidence (Optional)
+
+The citizen can send a photo of the issue (e.g., dry taps, overflowing drains).
+
+**System response:**
+> Photo received! Reply YES to submit or NO to cancel.
+
+The photo is uploaded to the `complaint-evidence` Supabase Storage bucket and linked to the complaint.
+
+---
+
+### Step 4 -- Submitting the Complaint
+
+The citizen replies **"yes"** to confirm.
+
+**System response:**
+> Your complaint has been registered!
+> Ticket ID: A1B2C3D4
+> Category: Water Supply
+> Urgency: High
+> Our team will take action shortly.
+
+The complaint is now stored in the `raw_complaints` table with status `open`. Email notifications are automatically sent to all relevant department teams (e.g., DJB for Water Supply) with ticket details and any photo evidence attached.
+
+---
+
+### Step 5 -- Checking Status
+
+At any time, the citizen can send **"status"** to see all their complaints:
+
+**System response:**
+> Your complaints:
 >
-> **"This is Delhi PS-CRM."**
+> 1. Ticket: A1B2C3D4
+>    Category: Water Supply
+>    Urgency: High
+>    Status: open
+>    Summary: No water supply in Rohini Sector 7 for three days.
 
 ---
 
-## 🚀 Demo Flow
+### Step 6 -- Automatic Escalation
 
-### Step 1: Show the Dashboard (1 minute)
+Every 30 minutes, the **APScheduler** cron job runs the escalation check:
 
-**Action:** Show the Complaints tab with existing data.
+1. It loads all unresolved complaints
+2. For each complaint, it counts how many other complaints share the same **category + location** (cluster count)
+3. The **GradientBoosting ML model** evaluates three features:
+   - Complaint status (assigned vs. not)
+   - Urgency level (Low to Critical)
+   - Cluster count (geographic/category concentration)
+4. If the model predicts escalation, the complaint status changes to `escalated`
 
-**What to highlight:**
-- Dark ops-room aesthetic — "Designed to feel like a government command center"
-- Real-time live indicator (green dot pulsing)
-- Stat cards at the top — Total, Open, Assigned, Resolved, Critical
-- SLA timers color-coded — green (on time), amber (warning), red (breach)
-- Escalation badges flashing on overdue critical complaints
+The citizen receives a notification:
 
-**Talking Point:**
-> *"This is what every MCD officer sees. Every complaint, every citizen, every department — in real time. No spreadsheets, no email chains, no lost files."*
+**System response:**
+> Your complaint A1B2C3D4 regarding Water Supply in Rohini Sector 7 has been escalated due to high priority.
 
----
-
-### Step 2: Live WhatsApp Demo — Filing a Complaint (3 minutes)
-
-**Action:** Pick up the citizen phone and send messages live.
-
-#### Message 1: Start
-```
-📱 Citizen sends: Hi
-```
-```
-🤖 Bot responds: 🏛️ Welcome to Delhi PS-CRM!
-                  I help you file civic complaints with the Government of Delhi.
-                  Please tell me your name to get started.
-```
-
-**Talking Point:**
-> *"No app download. No login. No OTP. Just WhatsApp — the app that's already on every phone in India."*
-
-#### Message 2: Registration
-```
-📱 Citizen sends: Rahul Sharma
-```
-```
-🤖 Bot responds: Thanks, Rahul! 🙏
-                  Please describe your civic complaint.
-                  You can write in Hindi, English, or Hinglish.
-```
-
-**Talking Point:**
-> *"Notice — we support Hindi, Hinglish, and English. 90% of Delhi thinks in Hindi. We meet them there."*
-
-#### Message 3: File Complaint (Hindi)
-```
-📱 Citizen sends: Hamare Saket mein main road par ek bahut bada gadha hai,
-                  2 din se koi repair nahi aaya. Bahut khatarnak hai,
-                  kal raat ek auto palat gaya
-```
-
-**Talking Point:**
-> *"This is real Hindi — the way real people talk. No structured form, no dropdown menus. Just natural language."*
-
-```
-🤖 Bot responds: 📋 Got it! Here's what I understood:
-                  
-                  🏷️ Category: Roads
-                  🚨 Urgency: Critical
-                  📍 Location: Saket, Main Road
-                  😤 Sentiment: Frustrated
-                  📝 "Large pothole on main road in Saket, unremedied for 2 days.
-                       Auto-rickshaw overturned last night."
-                  
-                  📸 Would you like to attach a photo? Send it now, or type "no" to skip.
-```
-
-**Talking Point:**
-> *"In under 2 seconds, GPT-4o has classified this as a Roads complaint, marked it Critical because of the accident, detected the citizen is frustrated, extracted the exact location, and generated an English summary for the officer. All from a Hindi message."*
-
-#### Message 4: Photo Evidence
-```
-📱 Citizen sends: [Photo of pothole]
-```
-```
-🤖 Bot responds: 📸 Photo received! Please confirm:
-                  
-                  Category: Roads | Urgency: Critical | Location: Saket
-                  
-                  Type "yes" to submit or "no" to cancel.
-```
-
-#### Message 5: Confirm
-```
-📱 Citizen sends: Yes
-```
-```
-🤖 Bot responds: ✅ Complaint #A7F3B2C1 filed successfully!
-                  You'll receive updates on WhatsApp as your complaint is processed.
-                  Thank you for making Delhi better! 🇮🇳
-```
+Escalation emails are also sent to all relevant department teams.
 
 ---
 
-### Step 3: Show Real-time Dashboard Update (1 minute)
+### Step 7 -- Duplicate Detection
 
-**Action:** Switch to the dashboard — the complaint should already be there.
+If a citizen tries to file a complaint that matches an existing unresolved complaint (same category + location), the system detects the duplicate:
 
-**What to highlight:**
-- New row highlighted with blue fade animation at the top of the table
-- Toast notification appeared: "New complaint: #A7F3B2C1"
-- Critical urgency badge (red)
-- Photo evidence icon (📷) clickable → opens lightbox
-- SLA timer already ticking
-
-**Talking Point:**
-> *"The officer didn't refresh the page. They didn't check email. The complaint appeared in real-time — the moment the citizen hit send. This is Supabase Realtime at work."*
-
----
-
-### Step 4: Officer Assignment (1 minute)
-
-**Action:** Click "Assign" on the new complaint.
-
-**What to show:**
-- Officer dropdown shows names + active workload count
-- Select an officer (e.g., "Ridhima Aggarwal (2 active)")
-- Click "Confirm"
-- Status changes from "Open" (amber) to "Assigned" (blue)
-- Toast: "Assigned to Ridhima Aggarwal"
-
-**Then switch to citizen phone:**
-```
-🤖 Bot sends: 📋 Update on complaint #A7F3B2C1:
-               Your complaint has been assigned to Officer Ridhima Aggarwal.
-               We're on it!
-```
-
-**Talking Point:**
-> *"The citizen knows exactly who is handling their problem. No more black holes. Full transparency."*
-
----
-
-### Step 5: Show Analytics Tab (1 minute)
-
-**Action:** Click the Analytics tab.
-
-**What to highlight:**
-- Average resolution time
-- Complaints by category (bar chart)
-- Urgency distribution (doughnut chart)
-- Daily trend line (last 7 days)
-- Open rate percentage
-
-**Talking Point:**
-> *"This isn't just a complaint box. It's an intelligence platform. Department heads can see trends before they become crises. If road complaints spike 200% in South Delhi — they know before the news covers it."*
-
----
-
-### Step 6: Show Map Tab (30 seconds)
-
-**Action:** Click the Map tab.
-
-**What to highlight:**
-- Dark-themed Delhi map with colored markers
-- Click a marker → popup with full complaint details
-- Color = urgency (red = critical, amber = high, blue = medium)
-- Clustering of complaints reveals problem areas
-
-**Talking Point:**
-> *"Every complaint is geocoded and plotted on a live map of Delhi. Clusters reveal systemic failures — if 15 water complaints come from the same colony, that's not 15 problems, it's one broken pipeline."*
-
----
-
-### Step 7: Show Kanban Board (1 minute)
-
-**Action:** Click the Board tab.
-
-**What to highlight:**
-- Three columns: Open → In Progress → Resolved
-- Drag a card from Open to In Progress → assignment modal appears
-- Cards show urgency color, category, location, summary
-- Real-time count badges on each column
-
-**Talking Point:**
-> *"Officers manage their workflow like a Jira board. Drag to assign, drag to resolve. No training needed — if you've used Trello, you can use this."*
-
----
-
-### Step 8: Show Scorecard Tab (1 minute)
-
-**Action:** Click the Scorecard tab.
-
-**What to highlight:**
-- Summary bar: Best performing, Most complaints, Fastest resolution, Most problematic
-- Department cards with letter grades (A–F)
-- Metrics: Total, Resolved, Avg Resolution, Open Rate
-- Progress bars showing resolution ratios
-- Officer leaderboard (🥇🥈🥉)
-- 7-day trend arrows
-
-**Talking Point:**
-> *"This is the executive report card. Every department gets graded like a school exam — A through F. The Chief Secretary can see at a glance: Which department is drowning? Which officer is a star? Where should we deploy more resources?"*
-
----
-
-### Step 9: Resolve the Complaint (30 seconds)
-
-**Action:** Go back to Complaints tab, click "Resolve" on the demo complaint.
-
-- Enter resolution notes: "Pothole repaired by road maintenance team. Barricades placed."
-- Click "Mark Resolved"
-- Status changes to green "Resolved"
-- SLA timer shows total resolution time
-
-**Switch to citizen phone:**
-```
-🤖 Bot sends: ✅ Great news! Complaint #A7F3B2C1 has been resolved!
-               
-               Resolution: Pothole repaired by road maintenance team.
-               Barricades placed.
-               
-               Thank you for making Delhi better, Rahul! 🇮🇳
-```
-
-**Talking Point:**
-> *"The loop is closed. The citizen filed in Hindi on WhatsApp, AI classified it, an officer was assigned, the problem was fixed, and the citizen was notified — all without a single form, a single portal visit, or a single phone call."*
-
----
-
-## 🎯 Closing Statement (30 seconds)
-
-> *"Delhi PS-CRM isn't a prototype. It's a working system — built in 48 hours — that handles the full lifecycle of civic complaints. From a WhatsApp message in Hindi to a resolved ticket with officer notes.*
+**System response:**
+> A similar complaint has already been filed.
 >
-> *500 million Indians use WhatsApp. Zero of them need to download an app to file a complaint.*
+> Ticket   : A1B2C3D4
+> Category : Water Supply
+> Location : Rohini Sector 7
+> Status   : open
 >
-> *This is how governance should work."*
+> Your complaint is already being tracked. Send NEW to file a different complaint or STATUS to check updates.
 
 ---
 
-## 📊 Key Statistics to Mention
+## Cancellation
 
-| Stat | Value |
-|---|---|
-| WhatsApp users in India | 500M+ |
-| Government app adoption rate | <2% |
-| Average complaint classification time | <2 seconds |
-| Languages supported | Hindi, Hinglish, English |
-| Dashboard deployment | Single HTML file, zero server |
-| AI accuracy on category classification | ~95% |
-| Number of departments covered | 6 |
-| Officers per department | 4 |
-| Build time | 48 hours |
-| Lines of code (dashboard) | ~1,100 |
+At any point during the complaint flow, the citizen can send **"no"** to cancel and return to the idle state.
+
+**System response:**
+> Cancelled. Send 'new' to file another complaint.
 
 ---
 
-## 💬 Sample Complaints for Demo
+## What Triggers Escalation?
 
-### Hindi Complaints
+The ML model considers these factors:
 
-| # | Message | Expected Category | Expected Urgency |
-|---|---|---|---|
-| 1 | `Hamare gali mein 3 din se kachra pada hai, bahut badbu aa rahi hai` | Waste Management | High |
-| 2 | `Saket main road par bahut bada gadha hai, kal auto palat gaya` | Roads | Critical |
-| 3 | `2 din se paani nahi aa raha, bacche bimar ho rahe hain` | Water Supply | Critical |
-| 4 | `Nali band ho gayi hai, ghar ke aage paani bhar gaya` | Sewage & Drainage | High |
-| 5 | `Streetlight 1 hafte se kharab hai, raat mein andhera rehta hai` | Electricity | Medium |
+| Factor                | Weight Influence                                      |
+|-----------------------|-------------------------------------------------------|
+| High/Critical urgency | Increases escalation probability                      |
+| High cluster count    | Many similar complaints in the same area -> escalate  |
+| Not yet assigned      | Unassigned complaints are more likely to escalate     |
 
-### English Complaints
-
-| # | Message | Expected Category | Expected Urgency |
-|---|---|---|---|
-| 6 | `There is a massive garbage pile near the park in Dwarka Sector 12, it's been there for a week` | Waste Management | High |
-| 7 | `Water pipeline burst on MG Road near metro station, water wasting for 3 hours` | Water Supply | Critical |
-| 8 | `Multiple potholes on Ring Road near Moolchand, caused 2 accidents this week` | Roads | Critical |
-| 9 | `Sewage overflow in Lajpat Nagar market, health hazard for shop owners` | Sewage & Drainage | Critical |
-| 10 | `Power cut in entire Rohini Sector 9 since morning, no update from BSES` | Electricity | High |
-
-### Hinglish Complaints
-
-| # | Message | Expected Category | Expected Urgency |
-|---|---|---|---|
-| 11 | `Yaar hamare area mein garbage truck aana band ho gaya hai, 5 din ho gaye` | Waste Management | High |
-| 12 | `Road completely broken near Connaught Place, daily traffic jam hota hai` | Roads | Medium |
-| 13 | `Water supply bohot low pressure aa raha hai, 4th floor tak nahi pahunchta` | Water Supply | Medium |
-
----
-
-## ⚠️ Troubleshooting During Demo
-
-| Issue | Fix |
-|---|---|
-| Dashboard not loading | Check internet, refresh page |
-| WhatsApp bot not responding | Check n8n workflow is active |
-| Complaint not appearing on dashboard | Check Supabase Realtime is enabled |
-| Map not showing markers | Nominatim rate limit — wait 30 seconds |
-| Charts not rendering | Click Analytics tab again to re-render |
-
----
-
-*Prepared for India Innovates Finals — Bharat Mandapam, New Delhi*
+The model was trained to identify complaints that need senior attention based on a combination of severity, inaction, and geographic clustering.

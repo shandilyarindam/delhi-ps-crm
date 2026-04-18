@@ -1,12 +1,12 @@
 ---
-name: ✨ Feature Request
+name: Feature Request
 about: Suggest a new feature or enhancement for Delhi PS-CRM
 title: "[FEATURE] "
 labels: enhancement
 assignees: ''
 ---
 
-## ✨ Feature Request
+## Feature Request
 
 ### Problem Statement
 <!-- A clear and concise description of the problem this feature would solve. -->
@@ -21,12 +21,12 @@ assignees: ''
 <!-- Which part of the system would this feature belong to? -->
 - [ ] WhatsApp Bot (citizen-facing)
 - [ ] AI / Classification
-- [ ] Dashboard — New Tab
-- [ ] Dashboard — Complaints Tab
-- [ ] Dashboard — Analytics Tab
-- [ ] Dashboard — Map Tab
-- [ ] Dashboard — Board Tab
-- [ ] Dashboard — Scorecard Tab
+- [ ] Dashboard - New Tab
+- [ ] Dashboard - Complaints Tab
+- [ ] Dashboard - Analytics Tab
+- [ ] Dashboard - Map Tab
+- [ ] Dashboard - Board Tab
+- [ ] Dashboard - Scorecard Tab
 - [ ] Database / Backend
 - [ ] Other
 
@@ -53,10 +53,10 @@ assignees: ''
 - [ ] Specific department: ___________
 
 ### Priority Suggestion
-- [ ] 🔴 Critical — System is unusable without this
-- [ ] 🟠 High — Major improvement to core workflow
-- [ ] 🟡 Medium — Nice to have, improves UX
-- [ ] 🟢 Low — Future enhancement
+- [ ] Critical - System is unusable without this
+- [ ] High - Major improvement to core workflow
+- [ ] Medium - Nice to have, improves UX
+- [ ] Low - Future enhancement
 
 ### Additional Context
 <!-- Add any other context, screenshots, or references here. -->
