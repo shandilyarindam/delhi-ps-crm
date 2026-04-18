@@ -100,6 +100,15 @@ def _thick_box(ws, r1: int, r2: int, c1: int, c2: int) -> None:
             )
 
 
+def _num_fmt(val) -> str:
+    """Return '#,##0' for whole numbers, '#,##0.##' for decimals."""
+    if isinstance(val, str):          # formula — result is usually an int
+        return "#,##0"
+    if isinstance(val, float) and val != int(val):
+        return "#,##0.##"
+    return "#,##0"
+
+
 def _cur(cell, value) -> None:
     """Set cell with Indian currency format and right alignment."""
     cell.value = value
@@ -132,7 +141,7 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     ws.merge_cells("A3:H3")
     ws["A3"] = (
         "Team: Delhi PS-CRM | Document: Cost Quotation v2.0 "
-        "| Excluding all applicable taxes"
+        "| Excluding all applicable taxes | All prices in INR"
     )
     ws["A3"].font = FONT_META
     ws["A3"].alignment = AC
@@ -313,23 +322,25 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
         ws.cell(row=row, column=4, value=specs).alignment = AL
 
         # Quantity cell (col E) — raw hardcoded input
-        # Always use '0.##' so 1→"1", 0.5→"0.5", 2.5→"2.5" (no trailing dot)
+        # Cast whole-number floats to int so Excel stores them cleanly
+        if isinstance(qty, float) and qty == int(qty):
+            qty = int(qty)
         qc = ws.cell(row=row, column=5, value=qty)
-        qc.number_format = "0.##"
+        qc.number_format = _num_fmt(qty)
         qc.alignment = AR
 
         # Unit Cost cell (col F) — raw hardcoded input
+        if isinstance(unit, float) and unit == int(unit):
+            unit = int(unit)
         uc = ws.cell(row=row, column=6, value=unit)
-        if isinstance(unit, float) and unit < 1:
-            uc.number_format = "0.00#"
-        elif isinstance(unit, float):
-            uc.number_format = "#,##0.00"
-        else:
-            uc.number_format = CURRENCY_FMT
+        uc.number_format = _num_fmt(unit)
         uc.alignment = AR
 
         # Total Cost cell (col G) — ALWAYS a formula
-        _cur(ws.cell(row=row, column=7), f"=E{row}*F{row}")
+        tc = ws.cell(row=row, column=7)
+        tc.value = f"=E{row}*F{row}"
+        tc.number_format = "#,##0"
+        tc.alignment = AR
 
         ws.cell(row=row, column=8, value=notes).alignment = AL
 
@@ -357,9 +368,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     # ────────────────────────────────────────────────────────────
     item(
         "Phase 1", "Team", "Student Developer Stipends",
-        "5 team members: backend, ML integration, architecture, testing, DevOps",
-        "=5*0.5", 25000,
-        "Half-month stipend weeks 1-2",
+        "5 students × 2 weeks (0.5 month) @ Rs. 25,000/person/month",
+        5, 12500,
+        "Rs. 25,000/person/month × 0.5 month × 5 students = Rs. 62,500",
     )
     item(
         "Phase 1", "Infrastructure", "Azure Container Apps Staging",
@@ -398,9 +409,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     # ────────────────────────────────────────────────────────────
     item(
         "Phase 2", "Team", "Student Developer Stipends",
-        "5 members during pilot: monitoring, bug fixes, officer onboarding",
-        "=5*0.5", 25000,
-        "Half-month stipend weeks 3-4",
+        "5 students × 2 weeks (0.5 month) @ Rs. 25,000/person/month",
+        5, 12500,
+        "Rs. 25,000/person/month × 0.5 month × 5 students = Rs. 62,500",
     )
     item(
         "Phase 2", "Infrastructure", "Azure Container Apps",
@@ -448,9 +459,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     # ────────────────────────────────────────────────────────────
     item(
         "Phase 3", "Team", "Student Developer Stipends",
-        "Scaling support, QA, officer training, data ops",
-        "=5*0.5", 25000,
-        "Half-month stipend weeks 5-6",
+        "5 students × 2 weeks (0.5 month) @ Rs. 25,000/person/month",
+        5, 12500,
+        "Rs. 25,000/person/month × 0.5 month × 5 students = Rs. 62,500",
     )
     item(
         "Phase 3", "Infrastructure", "Azure Container Apps",
@@ -520,9 +531,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     # ────────────────────────────────────────────────────────────
     item(
         "Phase 4", "Team", "Student Developer Stipends",
-        "Full-scale deployment support, ward onboarding, stress testing",
-        "=5*0.5", 25000,
-        "Half-month stipend weeks 7-8",
+        "5 students × 2 weeks (0.5 month) @ Rs. 25,000/person/month",
+        5, 12500,
+        "Rs. 25,000/person/month × 0.5 month × 5 students = Rs. 62,500",
     )
     item(
         "Phase 4", "Infrastructure", "Azure Container Apps",
