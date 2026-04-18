@@ -42,23 +42,6 @@ flowchart TD
   NotifRouter -->|resolved| ResolvedMsg[WhatsApp citizen resolved]
 ```
 
-```mermaid
-stateDiagram-v2
-  [*] --> registering: new user
-  registering --> idle: name saved
-
-  idle --> filing: sends NEW
-  idle --> idle: STATUS
-  idle --> idle: unrecognized
-
-  filing --> idle: duplicate found
-  filing --> confirming: complaint classified
-
-  confirming --> confirming: photo received
-  confirming --> idle: YES complaint filed
-  confirming --> idle: NO cancelled
-```
-
 ---
 
 ## Request Flow

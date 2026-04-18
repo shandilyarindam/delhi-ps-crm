@@ -4,6 +4,44 @@
 
 Citizens file complaints via WhatsApp in Hindi or English. The system uses Gemini AI to classify and extract structured data, stores everything in Supabase, and auto-escalates unresolved complaints using a trained ML model. This production backend replaces a previous n8n automation prototype.
 
+```mermaid
+flowchart TD
+  Citizen[Citizen WhatsApp] --> Meta[Meta Cloud API]
+  Meta --> Webhook[Webhook POST webhook]
+  Webhook --> Backend[FastAPI Backend]
+  Backend --> StateMachine[State machine]
+
+  StateMachine --> Registration[Registration handler]
+  StateMachine --> Idle[Idle handler]
+  StateMachine --> Filing[Filing handler]
+  StateMachine --> Confirming[Confirming handler]
+
+  Filing --> AI[AI classification Gemini]
+  Filing --> Duplicate[Duplicate check]
+  Duplicate -->|duplicate| DupNotify[Notify citizen and reset]
+  Duplicate -->|unique| Confirming
+
+  Confirming -->|photo| Storage[Supabase Storage evidence]
+  Confirming -->|yes| Insert[Insert raw complaints]
+
+  Insert --> Postgres[Supabase Postgres]
+  Insert --> Ticket[Send ticket WhatsApp]
+  Insert --> EmailDept[Email departments Gmail]
+
+  Backend --> Scheduler[APScheduler every 30 min]
+  Scheduler --> EscCron[Escalation cron]
+  EscCron --> Model[ML model Gradient Boosting]
+  Model -->|escalate| Escalate[Update status escalated]
+  Escalate --> EscCitizen[WhatsApp citizen]
+  Escalate --> EscHod[WhatsApp HoD]
+  Escalate --> EscEmail[Email departments]
+
+  Postgres --> SupWebhook[Supabase webhook]
+  SupWebhook --> NotifRouter[Notifications router]
+  NotifRouter -->|assigned| AssignedMsg[WhatsApp citizen assigned]
+  NotifRouter -->|resolved| ResolvedMsg[WhatsApp citizen resolved]
+```
+
 ---
 
 ## Architecture
@@ -61,60 +99,20 @@ Delhi-PS-CRM/
 
 ---
 
-## Setup
+## Deployment
 
-### Prerequisites
+The current implementation is deployed on Railway for demonstration purposes.
 
-- Python 3.11+
-- A Supabase project with `users` and `raw_complaints` tables
-- A Meta WhatsApp Business API account
-- A Google Gemini API key
-- A Gmail account with an app password for SMTP
+For production deployment at the scale of Delhi's civic infrastructure, the system is architected for Microsoft Azure:
 
-### Installation
+- **Backend** -- Azure App Service or Azure Container Apps with auto-scaling
+- **Database** -- migrate from Supabase to Azure Database for PostgreSQL
+- **Storage** -- Azure Blob Storage for complaint photo evidence
+- **ML Model** -- Azure Machine Learning for model serving and retraining pipelines
+- **Messaging** -- Azure Service Bus for webhook event queuing under high load
+- **Monitoring** -- Azure Monitor and Application Insights for observability
 
-```bash
-# Clone the repository
-git clone https://github.com/your-org/Delhi-PS-CRM.git
-cd Delhi-PS-CRM/delhi-ps-crm-backend
-
-# Create and activate virtual environment
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Configuration
-
-Copy `.env.example` to `.env` and fill in all values:
-
-```bash
-cp .env.example .env
-```
-
-| Variable                  | Description                                             | Required |
-|---------------------------|---------------------------------------------------------|----------|
-| `WHATSAPP_TOKEN`          | Meta WhatsApp Business API access token                 | Yes      |
-| `WHATSAPP_PHONE_NUMBER_ID`| WhatsApp Business phone number ID from Meta dashboard   | Yes      |
-| `WHATSAPP_VERIFY_TOKEN`   | Custom token for webhook verification handshake         | Yes      |
-| `GEMINI_API_KEY`          | Google Gemini API key for complaint classification      | Yes      |
-| `SUPABASE_URL`            | Supabase project URL                                    | Yes      |
-| `SUPABASE_KEY`            | Supabase service role or anon key                       | Yes      |
-| `HOD_WHATSAPP_NUMBER`     | WhatsApp number for HOD escalation alerts               | Yes      |
-| `OPENAI_API_KEY`          | OpenAI key (reserved for future use)                    | No       |
-| `GMAIL_ADDRESS`           | Gmail address for department email notifications        | No       |
-| `GMAIL_APP_PASSWORD`      | Gmail app password (16-char, not account password)      | No       |
-
-### Run
-
-```bash
-uvicorn main:app --reload --port 8000
-```
-
-The server starts at `http://localhost:8000`. Use ngrok or a tunnel to expose the webhook URL to Meta.
+The stateless architecture ensures horizontal scaling with no re-engineering -- each instance reads and writes state exclusively through the database, with no local state maintained on any server.
 
 ---
 
