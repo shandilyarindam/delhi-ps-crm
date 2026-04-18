@@ -221,9 +221,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
         ),
         (
             "Phase 4", "Weeks 7-8", "Full Delhi Deployment",
-            "All 272 wards live, 1,00,000 complaints/month, full system "
+            "All 272 wards live, 75,000 complaints/month, full system "
             "operational",
-            "1,00,000",
+            "75,000",
         ),
         (
             "Phase 5", "Month 3 onwards", "Steady State Operations",
@@ -368,9 +368,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     # ────────────────────────────────────────────────────────────
     item(
         "Phase 1", "Team", "Student Developer Stipends",
-        "5 students × 2 weeks (0.5 month) @ Rs. 25,000/person/month",
-        5, 12500,
-        "Rs. 25,000/person/month × 0.5 month × 5 students = Rs. 62,500",
+        "5 students × 2 weeks (0.5 month) @ Rs. 18,000/person/month",
+        5, 9000,
+        "Rs. 18,000/person/month × 0.5 month × 5 students = Rs. 45,000",
     )
     item(
         "Phase 1", "Infrastructure", "Azure Container Apps Staging",
@@ -409,9 +409,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     # ────────────────────────────────────────────────────────────
     item(
         "Phase 2", "Team", "Student Developer Stipends",
-        "5 students × 2 weeks (0.5 month) @ Rs. 25,000/person/month",
-        5, 12500,
-        "Rs. 25,000/person/month × 0.5 month × 5 students = Rs. 62,500",
+        "5 students × 2 weeks (0.5 month) @ Rs. 18,000/person/month",
+        5, 9000,
+        "Rs. 18,000/person/month × 0.5 month × 5 students = Rs. 45,000",
     )
     item(
         "Phase 2", "Infrastructure", "Azure Container Apps",
@@ -459,9 +459,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     # ────────────────────────────────────────────────────────────
     item(
         "Phase 3", "Team", "Student Developer Stipends",
-        "5 students × 2 weeks (0.5 month) @ Rs. 25,000/person/month",
-        5, 12500,
-        "Rs. 25,000/person/month × 0.5 month × 5 students = Rs. 62,500",
+        "5 students × 2 weeks (0.5 month) @ Rs. 18,000/person/month",
+        5, 9000,
+        "Rs. 18,000/person/month × 0.5 month × 5 students = Rs. 45,000",
     )
     item(
         "Phase 3", "Infrastructure", "Azure Container Apps",
@@ -531,9 +531,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     # ────────────────────────────────────────────────────────────
     item(
         "Phase 4", "Team", "Student Developer Stipends",
-        "5 students × 2 weeks (0.5 month) @ Rs. 25,000/person/month",
-        5, 12500,
-        "Rs. 25,000/person/month × 0.5 month × 5 students = Rs. 62,500",
+        "5 students × 2 weeks (0.5 month) @ Rs. 18,000/person/month",
+        5, 9000,
+        "Rs. 18,000/person/month × 0.5 month × 5 students = Rs. 45,000",
     )
     item(
         "Phase 4", "Infrastructure", "Azure Container Apps",
@@ -574,8 +574,8 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     )
     item(
         "Phase 4", "AI and ML", "Gemini 2.5 Flash-Lite API",
-        "Full-scale classification at 1,00,000 complaints/month",
-        100000, 0.012,
+        "Full-scale classification at 75,000 complaints/month",
+        75000, 0.012,
         "Full scale with 30% voice mix",
     )
     item(
@@ -586,8 +586,8 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
     )
     item(
         "Phase 4", "Communication", "WhatsApp Business API",
-        "Full Delhi citizen messaging at 1L conversations/month",
-        100000, 0.06,
+        "Full Delhi citizen messaging at 75K conversations/month",
+        75000, 0.06,
         "Peak communication cost",
     )
     item(
