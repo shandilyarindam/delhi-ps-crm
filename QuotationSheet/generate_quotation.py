@@ -203,7 +203,7 @@ def build_workbook() -> Workbook:
             "Development and Testing",
             "Backend complete, WhatsApp bot on test numbers, ML model integrated, staging environment, internal QA",
             "0",
-            115000,
+            116000,
         ),
         (
             "Phase 2",
@@ -211,7 +211,7 @@ def build_workbook() -> Workbook:
             "Pilot Deployment",
             "Live in 5 Delhi wards, real citizen complaints, bug fixes, officer onboarding",
             "1,000",
-            95940,
+            96060,
         ),
         (
             "Phase 3",
@@ -219,7 +219,7 @@ def build_workbook() -> Workbook:
             "Partial Rollout",
             "Expand to 50 wards, department routing live, ML escalation running on real data",
             "20,000",
-            55620,
+            58020,
         ),
         (
             "Phase 4",
@@ -227,7 +227,7 @@ def build_workbook() -> Workbook:
             "Full Delhi Deployment",
             "All 272 wards live, 1,00,000 complaints/month, full system operational",
             "1,00,000",
-            156940,
+            168940,
         ),
         (
             "Phase 5",
@@ -235,7 +235,7 @@ def build_workbook() -> Workbook:
             "Steady State Operations",
             "Handed to Delhi government IT team. Maintenance only, quarterly ML retraining",
             "1,00,000",
-            107250,
+            109650,
         ),
     ]
 
@@ -252,11 +252,11 @@ def build_workbook() -> Workbook:
     _style_zebra_rows(ws, phase_row_start, phase_row_end, 1, 6)
 
     # Totals lines (as text rows)
-    total_phases_1_4 = 423500
-    annual_maintenance = 1287000
+    total_phases_1_4 = 439020
+    annual_maintenance = 1315800
 
     ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=5)
-    ws.cell(row=row, column=1, value="Total Project Cost Phases 1-4: Rs. 4,23,500").font = Font(
+    ws.cell(row=row, column=1, value="Total Project Cost Phases 1-4: Rs. 4,39,020").font = Font(
         name="Calibri", size=11, bold=True, color="1F3864"
     )
     ws.cell(row=row, column=1).alignment = ALIGN_LEFT
@@ -269,7 +269,7 @@ def build_workbook() -> Workbook:
     ws.cell(
         row=row,
         column=1,
-        value="Annual Maintenance from Month 3: Rs. 12,87,000",
+        value="Annual Maintenance from Month 3: Rs. 13,15,800",
     ).font = Font(name="Calibri", size=11, bold=True, color="1F3864")
     ws.cell(row=row, column=1).alignment = ALIGN_LEFT
     for c in range(1, 7):
@@ -313,7 +313,7 @@ def build_workbook() -> Workbook:
         row += 1
 
     # Phase 1 subtotal row
-    write_phase_subtotal("Phase 1 total: Rs. 1,15,000", 115000)
+    write_phase_subtotal("Phase 1 total: Rs. 1,16,000", 116000)
 
     # Detail line items (phases 1-4) + phase 5 recurring
     line_items = [
@@ -323,6 +323,7 @@ def build_workbook() -> Workbook:
         ("Phase 1", "Infrastructure", "Azure Database for PostgreSQL Staging", "Managed database for development and testing", "0.5 month", "2,500", 1250, "Burstable B1ms tier"),
         ("Phase 1", "Testing", "WhatsApp API Sandbox", "Meta WhatsApp Business API test numbers and sandbox", "One-time", "5,000", 5000, "Test message costs"),
         ("Phase 1", "Testing", "API Integration Testing", "Gemini API test calls, SendGrid test emails, staging instance", "One-time", "4,000", 4000, "All third-party API test costs"),
+        ("Phase 1", "Testing", "Gemini Audio API Testing", "Voice note transcription and classification testing via Gemini Audio API", "One-time", "1,000", 1000, "Audio API test costs for voice complaints"),
         # Phase 2 subtotal row will be written separately
     ]
 
@@ -352,14 +353,14 @@ def build_workbook() -> Workbook:
         write_line_item(*li)
 
     # Phase 2 subtotal
-    write_phase_subtotal("Phase 2 total: Rs. 95,940", 95940)
+    write_phase_subtotal("Phase 2 total: Rs. 96,060", 96060)
 
     phase2_items = [
         ("Phase 2", "Team", "Student Developer Stipends", "5 members during pilot: monitoring, bug fixes, officer onboarding", "5 x 0.5 month", "18,000/member/month", 45000, "Half month stipend weeks 3-4"),
         ("Phase 2", "Infrastructure", "Azure Container Apps", "Live backend for 5-ward pilot", "0.5 month", "4,000", 2000, "Small instance"),
         ("Phase 2", "Infrastructure", "Azure Database for PostgreSQL", "Live database for pilot", "0.5 month", "2,500", 1250, "Burstable tier"),
         ("Phase 2", "Infrastructure", "Azure Blob Storage", "Photo evidence for pilot complaints", "0.5 month", "500", 250, "Minimal at 1K complaints"),
-        ("Phase 2", "AI and ML", "Gemini 2.0 Flash API", "AI classification for 1,000 pilot complaints", "1,000 calls", "0.40/call", 400, "Per-token billing"),
+        ("Phase 2", "AI and ML", "Gemini 2.0 Flash API", "AI classification for 1,000 pilot complaints", "1,000 calls", "0.52/call", 520, "Includes 30% voice note complaints"),
         ("Phase 2", "Communication", "WhatsApp Business API", "Live messaging for 5-ward pilot", "1,000 conversations", "0.47/conversation", 470, "Per conversation"),
         ("Phase 2", "Communication", "SendGrid", "Department notification emails", "1,000 emails", "0.10/email", 100, "Free tier covers this"),
     ]
@@ -367,14 +368,14 @@ def build_workbook() -> Workbook:
         write_line_item(*li)
 
     # Phase 3 subtotal
-    write_phase_subtotal("Phase 3 total: Rs. 55,620", 55620)
+    write_phase_subtotal("Phase 3 total: Rs. 58,020", 58020)
     phase3_items = [
         ("Phase 3", "Infrastructure", "Azure Container Apps", "Scaled backend for 50 wards", "0.5 month", "8,000", 4000, "Medium instance"),
         ("Phase 3", "Infrastructure", "Azure Database for PostgreSQL Flexible", "Production-grade database with backups", "0.5 month", "5,000", 2500, "General Purpose tier"),
         ("Phase 3", "Infrastructure", "Azure Blob Storage", "40GB photo storage at 20K complaints", "0.5 month", "1,500", 750, "LRS redundancy"),
         ("Phase 3", "Infrastructure", "Azure Monitor", "Observability and alerting", "0.5 month", "1,500", 750, "Required for SLA"),
         ("Phase 3", "Infrastructure", "Azure Service Bus", "Webhook event queuing at 20K/month", "0.5 month", "1,000", 500, "Standard tier"),
-        ("Phase 3", "AI and ML", "Gemini 2.0 Flash API", "AI classification for 20,000 complaints", "20,000 calls", "0.40/call", 8000, "Hindi and English"),
+        ("Phase 3", "AI and ML", "Gemini 2.0 Flash API", "AI classification for 20,000 complaints", "20,000 calls", "0.52/call", 10400, "Includes 30% voice note complaints"),
         ("Phase 3", "AI and ML", "Azure Machine Learning", "First retraining run on real pilot data", "1 run", "8,000", 8000, "Gradient Boosting retraining"),
         ("Phase 3", "Communication", "WhatsApp Business API", "Messaging for 50-ward citizens", "20,000 conversations", "0.47/conversation", 9400, "Scaling cost"),
         ("Phase 3", "Communication", "SendGrid", "Department and HoD emails", "20,000 emails", "0.10/email", 2000, "Essentials plan"),
@@ -384,7 +385,7 @@ def build_workbook() -> Workbook:
         write_line_item(*li)
 
     # Phase 4 subtotal
-    write_phase_subtotal("Phase 4 total: Rs. 1,56,940", 156940)
+    write_phase_subtotal("Phase 4 total: Rs. 1,68,940", 168940)
     phase4_items = [
         ("Phase 4", "Infrastructure", "Azure Container Apps", "Full-scale auto-scaling for 272 wards", "0.5 month", "15,000", 7500, "Production with zone redundancy"),
         ("Phase 4", "Infrastructure", "Azure Database for PostgreSQL", "High-availability production database with geo-redundant backups and Indian data residency compliance", "0.5 month", "12,000", 6000, "Business Critical tier"),
@@ -392,7 +393,7 @@ def build_workbook() -> Workbook:
         ("Phase 4", "Infrastructure", "Azure Monitor", "Full production observability with custom dashboards", "0.5 month", "3,000", 1500, "90-day log retention"),
         ("Phase 4", "Infrastructure", "Azure Service Bus", "Premium tier guaranteed delivery at 1L/month", "0.5 month", "2,000", 1000, "Premium tier"),
         ("Phase 4", "Infrastructure", "Azure Front Door CDN", "Full production CDN with WAF and DDoS protection", "0.5 month", "3,000", 1500, "WAF enabled"),
-        ("Phase 4", "AI and ML", "Gemini 2.0 Flash API", "Full-scale classification at 1,00,000 complaints/month", "1,00,000 calls", "0.40/call", 40000, "Largest AI cost"),
+        ("Phase 4", "AI and ML", "Gemini 2.0 Flash API", "Full-scale classification at 1,00,000 complaints/month", "1,00,000 calls", "0.52/call", 52000, "Includes 30% voice note complaints"),
         ("Phase 4", "AI and ML", "Azure Machine Learning", "Second retraining on expanded real complaint dataset", "1 run", "8,000", 8000, "Accuracy improves with real data"),
         ("Phase 4", "Communication", "WhatsApp Business API", "Full Delhi citizen messaging at 1L conversations/month", "1,00,000 conversations", "0.47/conversation", 47000, "Peak communication cost"),
         ("Phase 4", "Communication", "SendGrid", "Full department and HoD email volume", "1,00,000 emails", "0.10/email", 10000, "Pro plan"),
@@ -401,7 +402,7 @@ def build_workbook() -> Workbook:
         write_line_item(*li)
 
     # Phase 5 recurring subtotal
-    write_phase_subtotal("Phase 5 monthly recurring: Rs. 1,07,250/month", 107250)
+    write_phase_subtotal("Phase 5 monthly recurring: Rs. 1,09,650/month", 109650)
     phase5_items = [
         ("Phase 5", "Infrastructure", "Azure Container Apps", "per month", "1 month", "15,000", 15000, "Recurring"),
         ("Phase 5", "Infrastructure", "Azure Database for PostgreSQL", "per month", "1 month", "12,000", 12000, "Recurring"),
@@ -409,7 +410,7 @@ def build_workbook() -> Workbook:
         ("Phase 5", "Infrastructure", "Azure Monitor", "per month", "1 month", "3,000", 3000, "Recurring"),
         ("Phase 5", "Infrastructure", "Azure Service Bus", "per month", "1 month", "2,000", 2000, "Recurring"),
         ("Phase 5", "Infrastructure", "Azure Front Door CDN", "per month", "1 month", "3,000", 3000, "Recurring"),
-        ("Phase 5", "AI and ML", "Gemini 2.0 Flash API", "per month", "1 month", "8,000", 8000, "Recurring"),
+        ("Phase 5", "AI and ML", "Gemini 2.0 Flash API", "per month incl. 30% voice note complaints", "1 month", "10,400", 10400, "Recurring"),
         ("Phase 5", "AI and ML", "Azure Machine Learning", "per month amortized", "1 month", "5,000", 5000, "Quarterly retraining"),
         ("Phase 5", "Communication", "WhatsApp Business API", "per month", "1 month", "47,000", 47000, "Recurring"),
         ("Phase 5", "Communication", "SendGrid", "per month", "1 month", "3,500", 3500, "Recurring"),
@@ -447,12 +448,12 @@ def build_workbook() -> Workbook:
     row += 1
 
     unit_rows = [
-        ("Total deployment cost Phases 1-4", 423500),
-        ("Annual steady state cost Year 2", 1287000),
-        ("Cost per ward per month at full scale", 393),
-        ("Cost per complaint at full scale", 1.07),
+        ("Total deployment cost Phases 1-4", 439020),
+        ("Annual steady state cost Year 2", 1315800),
+        ("Cost per ward per month at full scale", 403),
+        ("Cost per complaint at full scale", 1.10),
         ("Citizens served estimate", 200000000),
-        ("Cost per citizen per year", 0.64),
+        ("Cost per citizen per year", 0.66),
         ("Wards covered at full deployment", 272),
         ("Languages supported", "Hindi and English"),
         ("Complaints processed per year estimate", 1200000),
@@ -483,7 +484,7 @@ def build_workbook() -> Workbook:
         row=row,
         column=1,
         value=(
-            "Cost per complaint of Rs. 1.07 includes AI classification, WhatsApp messaging, cloud infrastructure, "
+            "Cost per complaint of Rs. 1.10 includes AI classification (with voice note support), WhatsApp messaging, cloud infrastructure, "
             "email notifications, and ML-based auto-escalation -- delivered at a fraction of the cost of "
             "traditional call-centre based grievance systems."
         ),
@@ -522,10 +523,10 @@ def main() -> Path:
 if __name__ == "__main__":
     p = main()
     # Console totals (as required)
-    phase1 = 115000
-    phase2 = 95940
-    phase3 = 55620
-    phase4 = 156940
+    phase1 = 116000
+    phase2 = 96060
+    phase3 = 58020
+    phase4 = 168940
     grand_1_4 = phase1 + phase2 + phase3 + phase4
     print("Phase totals:")
     print(f"  Phase 1: {phase1:,}")
