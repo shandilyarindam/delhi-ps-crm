@@ -313,11 +313,9 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
         ws.cell(row=row, column=4, value=specs).alignment = AL
 
         # Quantity cell (col E) — raw hardcoded input
+        # Always use '0.##' so 1→"1", 0.5→"0.5", 2.5→"2.5" (no trailing dot)
         qc = ws.cell(row=row, column=5, value=qty)
-        if isinstance(qty, str) and qty.startswith("="):
-            qc.number_format = "0.##"
-        elif isinstance(qty, (int, float)):
-            qc.number_format = "#,##,##0" if qty >= 100 else "0.##"
+        qc.number_format = "0.##"
         qc.alignment = AR
 
         # Unit Cost cell (col F) — raw hardcoded input
