@@ -4,6 +4,7 @@ import json
 import logging
 
 from google import genai
+from google.genai import types
 
 from config import GEMINI_API_KEY
 from constants import CATEGORIES
@@ -91,3 +92,63 @@ async def analyze_complaint(message: str) -> dict:
             "summary": "",
             "sentiment": "Neutral",
         }
+
+
+AUDIO_PROMPT = """You are an AI assistant for Delhi PS-CRM.
+The attached audio is a citizen complaint in Hindi or English.
+First transcribe the audio, then analyze the complaint and respond ONLY with valid JSON:
+{
+  "transcription": "<full transcription of the audio>",
+  "category": "<Waste Management|Water Supply|Sewage & Drainage|Roads|Electricity|Other>",
+  "categories": ["<list of all relevant categories>"],
+  "urgency": "<Low|Medium|High|Critical>",
+  "location": "<location mentioned or Not specified>",
+  "ward": "<Delhi ward name or Unknown>",
+  "summary": "<one sentence summary in English>",
+  "sentiment": "<Neutral|Frustrated|Angry|Distressed|Polite>"
+}
+"""
+
+
+async def analyze_audio_complaint(audio_bytes: bytes, mime_type: str) -> dict:
+    """Transcribe and analyze an audio complaint using Gemini and return structured JSON."""
+    try:
+        parts = [
+            types.Part.from_text(AUDIO_PROMPT),
+            types.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
+        ]
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=parts)
+        raw = (response.text or "").strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+            raw = raw.strip()
+        result = json.loads(raw)
+
+        # Validate primary category
+        if result.get("category") not in CATEGORIES:
+            result["category"] = "Other"
+
+        # Validate categories list
+        categories = result.get("categories")
+        if not isinstance(categories, list) or not categories:
+            result["categories"] = [result["category"]]
+        else:
+            result["categories"] = [c for c in categories if c in CATEGORIES] or [result["category"]]
+
+        # Ensure ward field exists
+        if not result.get("ward"):
+            result["ward"] = "Unknown"
+
+        # Ensure transcription exists
+        if not result.get("transcription"):
+            result["transcription"] = ""
+
+        return result
+    except json.JSONDecodeError as exc:
+        logger.error("Failed to parse Gemini audio response as JSON: %s", exc)
+        raise
+    except Exception as exc:
+        logger.exception("Gemini audio analysis failed: %s", exc)
+        raise

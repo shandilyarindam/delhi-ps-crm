@@ -9,6 +9,8 @@ CATEGORIES = [
     "Other",
 ]
 
+SUPPORTED_AUDIO_TYPES = ["audio"]
+
 DEPARTMENT_EMAILS = {
     "Waste Management": "sakshameng2006@gmail.com",
     "Water Supply": "rittiqaaa001@gmail.com",

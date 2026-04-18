@@ -1,9 +1,13 @@
 """Handler for complaint filing -- collects complaint text, detects duplicates, and runs AI analysis."""
 
 import logging
+from typing import Optional
+
+import httpx
 
 from config import supabase
-from services.ai import analyze_complaint
+from config import WHATSAPP_TOKEN
+from services.ai import analyze_audio_complaint, analyze_complaint
 from services.whatsapp import send_message
 
 logger = logging.getLogger(__name__)
@@ -18,6 +22,20 @@ def _format_confirmation(draft: dict) -> str:
     """Format the AI-analyzed complaint draft into a confirmation message with ward."""
     return (
         "Thanks -- I've noted your complaint.\n"
+        f"Category    : {draft['category']}\n"
+        f"Urgency     : {draft['urgency']}\n"
+        f"Location    : {draft['location']}\n"
+        f"Ward        : {draft.get('ward', 'Unknown')}\n"
+        f"Summary     : {draft['summary']}\n"
+        "\nReply YES to submit, NO to cancel, or send a photo as evidence."
+    )
+
+
+def _format_voice_confirmation(draft: dict) -> str:
+    """Format the voice-note confirmation message including transcription."""
+    return (
+        "Voice note received. Here is what I understood:\n\n"
+        f"Transcription: {draft.get('transcription', '')}\n\n"
         f"Category    : {draft['category']}\n"
         f"Urgency     : {draft['urgency']}\n"
         f"Location    : {draft['location']}\n"
@@ -43,23 +61,53 @@ def _format_duplicate(existing: dict, ticket_id: str) -> str:
 
 
 async def handle_filing(
-    whatsapp_number: str, message_text: str, *, message_type: str = "text"
+    whatsapp_number: str,
+    message_text: str,
+    *,
+    message_type: str = "text",
+    media_id: Optional[str] = None,
 ) -> None:
     """Process the user's complaint description, check for duplicates, and generate an AI-analyzed draft."""
-    if message_type != "text":
+    is_voice = False
+    text = (message_text or "").strip()
+
+    if message_type == "audio":
+        if not media_id or not WHATSAPP_TOKEN:
+            await send_message(
+                whatsapp_number,
+                "Sorry, I could not process your voice note. Please type your complaint instead.",
+            )
+            return
+
+        try:
+            audio_bytes, mime_type = await _download_whatsapp_audio(media_id)
+            mime_type = mime_type or "audio/ogg"
+            analysis = await analyze_audio_complaint(audio_bytes, mime_type)
+            transcription = (analysis.get("transcription") or "").strip()
+            if not transcription:
+                raise ValueError("Empty transcription")
+            text = transcription
+            is_voice = True
+        except Exception:
+            logger.exception("Audio complaint processing failed for %s", whatsapp_number)
+            await send_message(
+                whatsapp_number,
+                "Sorry, I could not process your voice note. Please type your complaint instead.",
+            )
+            return
+
+    elif message_type == "text":
+        if not text:
+            await send_message(whatsapp_number, "Please describe your issue.")
+            return
+        logger.info("Analyzing complaint from %s", whatsapp_number)
+        analysis = await analyze_complaint(text)
+    else:
         await send_message(
             whatsapp_number,
             "Please describe your issue in a text message.",
         )
         return
-
-    text = (message_text or "").strip()
-    if not text:
-        await send_message(whatsapp_number, "Please describe your issue.")
-        return
-
-    logger.info("Analyzing complaint from %s", whatsapp_number)
-    analysis = await analyze_complaint(text)
 
     category = analysis.get("category", "Other")
     location = analysis.get("location", "Location not specified")
@@ -99,13 +147,18 @@ async def handle_filing(
         "complaint_text": text,
         "photo_url": None,
     }
+    if is_voice:
+        draft["transcription"] = (analysis.get("transcription") or "").strip()
     supabase.table("users").update(
         {
             "state": "confirming",
             "state_data": {"draft": draft},
         }
     ).eq("whatsapp_number", whatsapp_number).execute()
-    await send_message(whatsapp_number, _format_confirmation(draft))
+    await send_message(
+        whatsapp_number,
+        _format_voice_confirmation(draft) if is_voice else _format_confirmation(draft),
+    )
     logger.info(
         "Draft created for %s: category=%s, categories=%s, urgency=%s, ward=%s",
         whatsapp_number,
@@ -114,3 +167,20 @@ async def handle_filing(
         draft["urgency"],
         draft["ward"],
     )
+
+
+async def _download_whatsapp_audio(media_id: str) -> tuple[bytes, Optional[str]]:
+    """Download an audio media attachment from WhatsApp Cloud API by media_id."""
+    headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}"}
+    graph_base = "https://graph.facebook.com/v18.0"
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        meta = await client.get(f"{graph_base}/{media_id}", headers=headers)
+        meta.raise_for_status()
+        media = meta.json()
+        download_url = media.get("url")
+        mime = media.get("mime_type")
+        if not download_url:
+            raise ValueError("Missing media download URL")
+        audio_res = await client.get(download_url, headers=headers)
+        audio_res.raise_for_status()
+        return audio_res.content, mime

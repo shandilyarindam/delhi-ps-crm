@@ -4,6 +4,8 @@
 
 Citizens file complaints via WhatsApp in Hindi or English. The system uses Gemini AI to classify and extract structured data, stores everything in Supabase, and auto-escalates unresolved complaints using a trained ML model. This production backend replaces a previous n8n automation prototype.
 
+Voice complaint filing -- citizens can send WhatsApp voice notes in Hindi or English. Gemini AI transcribes and classifies the audio in a single API call, with transcription shown to the citizen for verification before submission.
+
 ```mermaid
 flowchart TD
   Citizen[Citizen WhatsApp] --> Meta[Meta Cloud API]
@@ -16,8 +18,13 @@ flowchart TD
   StateMachine --> Filing[Filing handler]
   StateMachine --> Confirming[Confirming handler]
 
-  Filing --> AI[AI classification Gemini]
-  Filing --> Duplicate[Duplicate check]
+  Filing --> TextIn[Text complaint]
+  Filing --> AudioIn[Voice note]
+  AudioIn --> AudioDl[Download audio]
+  AudioDl --> AudioAI[Gemini audio transcribe and classify]
+  TextIn --> TextAI[Gemini classify]
+  TextAI --> Duplicate[Duplicate check]
+  AudioAI --> Duplicate
   Duplicate -->|duplicate| DupNotify[Notify citizen and reset]
   Duplicate -->|unique| Confirming
 

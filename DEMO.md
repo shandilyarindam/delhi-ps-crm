@@ -59,6 +59,34 @@ or
 
 ---
 
+### Voice Note Filing Scenario
+
+This scenario demonstrates voice note filing. It works in Hindi, English, and mixed-language input.
+
+User: [sends voice note saying "Rohini Sector 7 mein teen din se paani nahi aa raha"]
+
+Bot: Voice note received. Here is what I understood:
+
+     Transcription: Rohini Sector 7 mein teen din se paani nahi aa raha
+
+     Category    : Water Supply
+     Urgency     : High
+     Location    : Rohini Sector 7
+     Ward        : Rohini West Ward
+     Summary     : No water supply in Rohini Sector 7 for three days
+
+     Reply YES to submit, NO to cancel, or send a photo as evidence.
+
+User: yes
+
+Bot: Your complaint has been registered.
+     Ticket   : A1B2C3D4
+     Category : Water Supply
+     Urgency  : High
+     Our team will take action shortly.
+
+---
+
 ### Step 3 -- Attaching Photo Evidence (Optional)
 
 The citizen can send a photo of the issue (e.g., dry taps, overflowing drains).

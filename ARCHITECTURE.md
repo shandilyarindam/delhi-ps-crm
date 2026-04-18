@@ -16,8 +16,13 @@ flowchart TD
   StateMachine --> Filing[Filing handler]
   StateMachine --> Confirming[Confirming handler]
 
-  Filing --> AI[AI classification Gemini]
-  Filing --> Duplicate[Duplicate check]
+  Filing --> TextIn[Text complaint]
+  Filing --> AudioIn[Voice note]
+  AudioIn --> AudioDl[Download audio]
+  AudioDl --> AudioAI[Gemini audio transcribe and classify]
+  TextIn --> TextAI[Gemini classify]
+  TextAI --> Duplicate[Duplicate check]
+  AudioAI --> Duplicate
   Duplicate -->|duplicate| DupNotify[Notify citizen and reset]
   Duplicate -->|unique| Confirming
 
@@ -66,7 +71,7 @@ Users progress through these states:
 | `(new user)`    | `registration.py`    | Creates user row, collects name                |
 | `registering`   | `registration.py`    | Awaiting name input                            |
 | `idle`          | `idle.py`            | Accepts `new` (file complaint) or `status`     |
-| `filing`        | `filing.py`          | Collects complaint text, sends to Gemini AI    |
+| `filing`        | `filing.py`          | Collects complaint text or voice note, sends to Gemini AI |
 | `confirming`    | `confirming.py`      | User reviews AI analysis, can attach photo     |
 | `awaiting_photo`| `confirming.py`      | Accepts image upload to Supabase Storage       |
 
@@ -89,6 +94,21 @@ Gemini handles **Hindi and English** input naturally -- no translation step is n
 ### 4. Complaint Submission
 
 After the user confirms (replies "YES"), the complaint is inserted into the `raw_complaints` table with all AI-analyzed fields. The user receives a ticket ID (first 8 characters of the UUID). Email notifications are sent to all relevant department teams via Gmail SMTP.
+
+---
+
+## Voice Note Flow
+
+1. User sends WhatsApp voice note during filing state
+2. Webhook router extracts media_id from audio message
+3. Filing handler downloads audio bytes from WhatsApp Cloud API using media_id
+4. Audio bytes sent inline to Gemini 2.0 Flash with classification prompt
+5. Gemini transcribes and classifies in a single API call -- returns transcription, category, urgency, location, ward, summary, sentiment
+6. Duplicate check runs on AI-extracted category and location
+7. Confirmation message sent to citizen including transcription for verification
+8. Flow continues identically to text complaint path
+
+Note: WhatsApp voice notes use audio/ogg with opus codec and Gemini handles this natively with no additional transcription service required.
 
 ---
 

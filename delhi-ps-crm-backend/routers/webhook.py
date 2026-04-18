@@ -46,6 +46,8 @@ def _extract_incoming_messages(
                 media_id = None
                 if typ == "image":
                     media_id = (msg.get("image") or {}).get("id")
+                if typ == "audio":
+                    media_id = (msg.get("audio") or {}).get("id")
                 out.append((str(from_id), text, typ, media_id))
     return out
 

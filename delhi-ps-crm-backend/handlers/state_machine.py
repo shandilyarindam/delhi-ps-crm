@@ -49,7 +49,10 @@ async def route_message(
         await handle_idle(whatsapp_number, message_text)
     elif state == "filing":
         await handle_filing(
-            whatsapp_number, message_text, message_type=message_type
+            whatsapp_number,
+            message_text,
+            message_type=message_type,
+            media_id=media_id,
         )
     elif state == "awaiting_photo":
         await handle_confirming(
