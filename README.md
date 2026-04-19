@@ -8,26 +8,6 @@ Voice complaint filing -- citizens can send WhatsApp voice notes in Hindi or Eng
 
 ---
 
-## Demo Videos
-
-https://github.com/user-attachments/assets/delhi-ps-crm-demo.mp4
-
-*Citizen files a complaint via WhatsApp in Hindi*
-
-https://github.com/user-attachments/assets/officer-assigned.mp4
-
-*Officer assigned — citizen receives WhatsApp notification*
-
-https://github.com/user-attachments/assets/complaint-resolved.mp4
-
-*Complaint resolved — citizen rates the officer*
-
-https://github.com/user-attachments/assets/frontend.mp4
-
-*ML model auto-escalates complaint — HoD notified*
-
----
-
 ## Architecture
 
 ```mermaid
