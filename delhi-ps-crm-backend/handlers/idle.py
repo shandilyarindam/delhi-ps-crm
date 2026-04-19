@@ -1,4 +1,4 @@
-"""Handler for idle-state users: status checks, new complaints, and cancellation."""
+"""Handler for idle-state users: status checks, new complaints, ratings, and cancellation."""
 
 import logging
 
@@ -20,7 +20,8 @@ async def cancel_complaint_flow(whatsapp_number: str) -> None:
     ).eq("whatsapp_number", whatsapp_number).execute()
     await send_message(
         whatsapp_number,
-        "Cancelled. Send 'new' to file another complaint.",
+        "Your complaint has been cancelled. "
+        "Send NEW to file a fresh complaint or STATUS to view existing ones.",
     )
     logger.info("Complaint flow cancelled for %s", whatsapp_number)
 
@@ -56,22 +57,71 @@ async def _send_complaint_status(whatsapp_number: str) -> None:
     await send_message(whatsapp_number, body)
 
 
+async def _handle_rating(whatsapp_number: str, rating: int) -> None:
+    """Record a citizen rating for the most recently resolved complaint."""
+    res = (
+        supabase.table("raw_complaints")
+        .select("id")
+        .eq("whatsapp_number", whatsapp_number)
+        .eq("status", "resolved")
+        .order("timestamp", desc=True)
+        .limit(1)
+        .execute()
+    )
+    rows = res.data or []
+    if not rows:
+        await send_message(
+            whatsapp_number,
+            "No resolved complaint found to rate. "
+            "Send NEW to report a civic issue or STATUS to track your existing complaints.",
+        )
+        return
+
+    cid = rows[0]["id"]
+    supabase.table("raw_complaints").update(
+        {"rating": rating}
+    ).eq("id", cid).execute()
+    await send_message(
+        whatsapp_number,
+        f"Thank you for your feedback. Your rating of {rating}/5 has been recorded.",
+    )
+    logger.info("User %s rated complaint %s: %d/5", whatsapp_number, cid, rating)
+
+
+NEW_COMPLAINT_TEXT = (
+    "Please describe the civic issue you want to report. "
+    "Include your location or area name for faster resolution.\n\n"
+    "You can:\n"
+    "- Type your complaint in Hindi, English, Urdu, Punjabi, or any regional language\n"
+    "- Send a voice note describing the issue\n\n"
+    "Our system will automatically understand and process your complaint."
+)
+
+
 async def handle_idle(whatsapp_number: str, message_text: str) -> None:
-    """Handle messages from users in idle state -- dispatches to status or new complaint flow."""
+    """Handle messages from users in idle state -- dispatches to status, new complaint, or rating."""
     t = (message_text or "").strip().lower()
+
     if t == "status":
         await _send_complaint_status(whatsapp_number)
         return
+
     if t == "new":
         supabase.table("users").update(
             {"state": "filing", "state_data": {}}
         ).eq("whatsapp_number", whatsapp_number).execute()
-        await send_message(whatsapp_number, "Describe your issue")
+        await send_message(whatsapp_number, NEW_COMPLAINT_TEXT)
         logger.info("User %s started new complaint flow", whatsapp_number)
+        return
+
+    # Check for rating (1-5)
+    if t in ("1", "2", "3", "4", "5"):
+        await _handle_rating(whatsapp_number, int(t))
         return
 
     # Fallback for unrecognized input
     await send_message(
         whatsapp_number,
-        "I did not understand that.\n\nSend NEW to file a complaint or STATUS to check your existing complaints.",
+        "I could not understand your message. "
+        "Please send NEW to report a civic issue or STATUS to check your complaint history.",
     )

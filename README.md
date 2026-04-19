@@ -1,10 +1,35 @@
 # Delhi PS-CRM
 
-**WhatsApp-based civic complaint management system for Delhi.**
+**AI-powered civic grievance management for Delhi -- file complaints in any language, get real-time updates, auto-escalation via ML.**
 
-Citizens file complaints via WhatsApp in Hindi or English. The system uses Gemini AI to classify and extract structured data, stores everything in Supabase, and auto-escalates unresolved complaints using a trained ML model. This production backend replaces a previous n8n automation prototype.
+Citizens interact entirely through WhatsApp. No app downloads, no forms, no English literacy required. Speak or type a complaint in Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, or any mix -- Gemini AI understands, classifies, and routes it to the right department. A trained ML model auto-escalates unresolved complaints. Officers manage everything through a real-time admin dashboard.
 
-Voice complaint filing -- citizens can send WhatsApp voice notes in Hindi or English. Gemini AI transcribes and classifies the audio in a single API call, with transcription shown to the citizen for verification before submission.
+---
+
+## The Problem
+
+Delhi has over 20 million citizens and no accessible, unified digital grievance system that works for everyone.
+
+- **Existing systems require app downloads**, English literacy, and reliable internet access -- excluding a large portion of the population
+- **Complaints fall through the cracks** with no tracking, no accountability, and no follow-up
+- **No automated prioritization** -- critical issues sit in the same queue as minor requests
+- **Citizens have no visibility** into whether their complaint was received, assigned, or resolved
+- **Departments operate in silos** -- a complaint involving multiple departments (e.g., sewage overflow on a road) gets lost between teams
+
+---
+
+## Our Solution
+
+| Capability | Description |
+|---|---|
+| **WhatsApp-based** | Zero app download, works on any phone with WhatsApp |
+| **Multilingual** | Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, and more |
+| **Voice notes** | Citizens speak their complaint -- Gemini transcribes and classifies in one API call |
+| **AI classification** | Gemini 2.0 Flash extracts category, urgency, location, ward, sentiment automatically |
+| **ML escalation** | Gradient Boosting model auto-escalates based on status, urgency, and cluster count |
+| **Real-time dashboard** | Officers manage complaints via Kanban board, geospatial map, and analytics |
+| **Department routing** | Complaints routed to correct department email automatically -- multi-department support |
+| **Full accountability** | Officer assignment tracked, resolution notes required, citizen rating system (1-5) |
 
 ---
 
@@ -73,6 +98,7 @@ https://github.com/user-attachments/assets/bf4676bb-6c87-47c9-96d0-68c3e41734ea
 | Component                | Technology                        |
 |--------------------------|-----------------------------------|
 | Backend Framework        | FastAPI (Python 3.11+)            |
+| Admin Dashboard          | Next.js 14, Tailwind CSS, Recharts, Leaflet |
 | Database & Auth          | Supabase (Postgres + Storage)     |
 | AI Classification        | Google Gemini 2.0 Flash           |
 | Messaging Channel        | WhatsApp Business API (Meta)      |
@@ -80,6 +106,24 @@ https://github.com/user-attachments/assets/bf4676bb-6c87-47c9-96d0-68c3e41734ea
 | Email Notifications      | Gmail SMTP                        |
 | Task Scheduling          | APScheduler (async, 30-min cycle) |
 | Deployment               | Railway (Nixpacks)                |
+
+---
+
+## Key Features
+
+- **Complaint filing via text or voice note** in any Indian language -- Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, and more
+- **Gemini AI extracts category, urgency, ward, location, sentiment** in a single API call -- no separate translation or NLP pipeline
+- **Duplicate complaint detection** prevents redundant filings by matching category + location against existing open complaints
+- **Photo evidence upload** to Supabase Storage with automatic linking to the complaint record
+- **Multi-department routing** -- one complaint can notify multiple departments simultaneously (e.g., Roads + Water Supply)
+- **Gradient Boosting ML model (F1: 0.9273)** for auto-escalation based on status, urgency, and geographic clustering
+- **APScheduler runs escalation check every 30 minutes** -- no manual intervention required
+- **Real-time WhatsApp notifications** for officer assignment and complaint resolution
+- **Citizen rating system (1-5)** after complaint resolution -- feedback loop for service improvement
+- **Admin dashboard with Kanban board**, geospatial map view, analytics charts, and officer accountability tracking
+- **Drag-and-drop Kanban** with modal confirmation for officer assignment and resolution notes
+- **Export complaints as CSV** for offline analysis and reporting
+- **30-second webhook deduplication** prevents Meta retry spam from creating duplicate processing
 
 ---
 
@@ -95,8 +139,8 @@ Delhi-PS-CRM/
   - handlers/                    # Conversational state handlers
     - state_machine.py           # Routes messages by user state
     - registration.py            # New user registration
-    - idle.py                    # Status check & new complaint trigger
-    - filing.py                  # Complaint text, AI analysis, duplicate check
+    - idle.py                    # Status check, new complaint, rating
+    - filing.py                  # Complaint text/voice, AI analysis, duplicate check
     - confirming.py              # Confirm, attach photo, submit
     - awaiting_photo.py          # WhatsApp image download, Supabase Storage
   - services/                    # External integrations
@@ -113,12 +157,10 @@ Delhi-PS-CRM/
     - escalation_model.pkl       # Trained GradientBoosting model
     - schemas.py                 # Pydantic schemas
     - README.md                  # Model documentation
-- delhi-ps-crm-dashboard.html    # Admin dashboard (standalone)
-- index.html                     # Landing page
+- delhi-ps-crm-dashboard/        # Next.js admin dashboard
 - ARCHITECTURE.md                # System architecture documentation
 - DEMO.md                        # Demo walkthrough
 - railway.toml                   # Railway deployment config
-- .gitignore
 ```
 
 ---
@@ -149,6 +191,12 @@ The stateless architecture ensures horizontal scaling with no re-engineering -- 
 | GET    | `/webhook`                  | WhatsApp webhook verification (Meta handshake)|
 | POST   | `/webhook`                  | Receive incoming WhatsApp messages           |
 | POST   | `/notifications/assignment` | Officer assignment and resolution alerts     |
+
+---
+
+## Team
+
+Built by **Team Delhi PS-CRM, NSUT**
 
 ---
 

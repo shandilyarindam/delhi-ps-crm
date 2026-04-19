@@ -17,12 +17,14 @@ class ComplaintCreate(BaseModel):
     category: str
     categories: list[str] = Field(default_factory=list)
     urgency: str = "Medium"
-    location: str = "Not specified"
+    location: str = "Location not specified"
     ward: str = "Unknown"
     sentiment: str = "Neutral"
     summary: str = ""
     status: str = "open"
     photo_url: Optional[str] = None
+    raw_message: str = ""
+    rating: Optional[int] = None
 
 
 class UserCreate(BaseModel):

@@ -59,9 +59,9 @@ flowchart TD
 WhatsApp -> Meta Webhook -> POST /webhook -> FastAPI -> State Machine
 ```
 
-1. A citizen sends a WhatsApp message (text or image)
+1. A citizen sends a WhatsApp message (text, voice note, or image)
 2. Meta's Cloud API delivers it to our `POST /webhook` endpoint
-3. The webhook router parses the payload and extracts sender, text, type, and media ID
+3. The webhook router extracts sender, text, type, media ID, and timestamp (for 30-second deduplication)
 4. The **state machine** (`handlers/state_machine.py`) looks up the user's current state in Supabase and routes to the appropriate handler
 
 ### 2. Conversational State Machine
@@ -72,12 +72,12 @@ Users progress through these states:
 |-----------------|----------------------|------------------------------------------------|
 | `(new user)`    | `registration.py`    | Creates user row, collects name                |
 | `registering`   | `registration.py`    | Awaiting name input                            |
-| `idle`          | `idle.py`            | Accepts `new` (file complaint) or `status`     |
+| `idle`          | `idle.py`            | Accepts `new`, `status`, or rating (1-5)       |
 | `filing`        | `filing.py`          | Collects complaint text or voice note, sends to Gemini AI |
 | `confirming`    | `confirming.py`      | User reviews AI analysis, can attach photo     |
 | `awaiting_photo`| `confirming.py`      | Accepts image upload to Supabase Storage       |
 
-At any state (except registration), sending **"no"** cancels the flow and returns to `idle`.
+During the `confirming` state, sending **"no"** cancels the complaint and returns to `idle`.
 
 ### 3. AI Classification
 
@@ -89,9 +89,9 @@ When a user files a complaint, the text is sent to **Gemini 2.0 Flash** with a s
 - **Location**: Extracted from the complaint text
 - **Ward**: Delhi municipal ward derived from the location
 - **Summary**: One-sentence summary
-- **Sentiment**: Neutral, Frustrated, Angry, Distressed, Polite
+- **Sentiment**: Neutral, Frustrated, Angry, Urgent
 
-Gemini handles **Hindi and English** input naturally -- no translation step is needed.
+Gemini handles **Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, and other Indian regional languages** naturally -- no separate translation step is needed.
 
 ### 4. Complaint Submission
 
@@ -100,6 +100,8 @@ After the user confirms (replies "YES"), the complaint is inserted into the `raw
 ---
 
 ## Voice Note Flow
+
+Citizens can send voice notes in Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, or any mix of Indian regional languages.
 
 1. User sends WhatsApp voice note during filing state
 2. Webhook router extracts media_id from audio message
@@ -156,9 +158,11 @@ APScheduler (every 30 min) -> ML Model prediction -> Supabase update -> WhatsApp
 | `ward`            | text        | Delhi municipal ward                              |
 | `sentiment`       | text        | AI-detected sentiment                             |
 | `summary`         | text        | AI-generated summary                              |
+| `raw_message`     | text        | Original complaint text or transcription          |
 | `status`          | text        | open, assigned, in_progress, escalated, resolved  |
 | `photo_url`       | text        | Public URL to evidence photo (nullable)           |
 | `assigned_to`     | text        | Assigned officer name (nullable)                  |
+| `rating`          | integer     | Citizen satisfaction rating 1-5 (nullable)        |
 | `timestamp`       | timestamptz | Complaint submission timestamp                    |
 
 ### Supabase Storage

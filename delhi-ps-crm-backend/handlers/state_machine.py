@@ -6,15 +6,10 @@ from typing import Optional
 from config import supabase
 from handlers.confirming import handle_confirming
 from handlers.filing import handle_filing
-from handlers.idle import cancel_complaint_flow, handle_idle
+from handlers.idle import handle_idle
 from handlers.registration import handle_registration
 
 logger = logging.getLogger(__name__)
-
-
-def _is_no(text: str) -> bool:
-    """Check if the user's message is a cancellation command."""
-    return (text or "").strip().lower() == "no"
 
 
 async def route_message(
@@ -37,12 +32,14 @@ async def route_message(
 
     logger.info("Routing message from %s (state=%s, type=%s)", whatsapp_number, state, message_type)
 
-    if state is None or state == "registering":
+    # New user -- not in DB at all
+    if user is None:
         await handle_registration(whatsapp_number, message_text)
         return
 
-    if user and _is_no(message_text) and message_type == "text":
-        await cancel_complaint_flow(whatsapp_number)
+    # User exists but still registering
+    if state == "registering":
+        await handle_registration(whatsapp_number, message_text)
         return
 
     if state == "idle":
@@ -54,14 +51,7 @@ async def route_message(
             message_type=message_type,
             media_id=media_id,
         )
-    elif state == "awaiting_photo":
-        await handle_confirming(
-            whatsapp_number,
-            message_text,
-            message_type=message_type,
-            media_id=media_id,
-        )
-    elif state == "confirming":
+    elif state in ("confirming", "awaiting_photo"):
         await handle_confirming(
             whatsapp_number,
             message_text,

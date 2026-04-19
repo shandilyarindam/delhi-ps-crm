@@ -7,7 +7,11 @@ from services.whatsapp import send_message
 
 logger = logging.getLogger(__name__)
 
-WELCOME_TEXT = "Welcome to Delhi PS-CRM! Please tell me your name."
+WELCOME_TEXT = (
+    "Namaskar! Welcome to the Delhi Civic Grievance Portal. "
+    "I am here to help you report civic issues in your area.\n\n"
+    "To get started, please share your full name."
+)
 
 
 async def handle_registration(whatsapp_number: str, message_text: str) -> None:
@@ -41,7 +45,8 @@ async def handle_registration(whatsapp_number: str, message_text: str) -> None:
             ).eq("whatsapp_number", whatsapp_number).execute()
             await send_message(
                 whatsapp_number,
-                f"Thanks {name}! You're registered. Reply NEW to file a complaint or STATUS to check existing ones.",
+                f"Thank you, {name}. Your account has been created.\n\n"
+                "Send NEW to report a civic issue or STATUS to track your existing complaints.",
             )
             logger.info("User %s registered with name: %s", whatsapp_number, name)
         else:

@@ -1,6 +1,7 @@
 """WhatsApp webhook router -- handles Meta verification and incoming messages."""
 
 import logging
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Request, Response, Query
@@ -11,6 +12,8 @@ from handlers.state_machine import route_message
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+MAX_MESSAGE_AGE_SECONDS = 30
 
 
 @router.get("/webhook")
@@ -29,9 +32,9 @@ async def verify_webhook(
 
 def _extract_incoming_messages(
     body: Dict[str, Any],
-) -> List[Tuple[str, str, str, Optional[str]]]:
-    """Parse WhatsApp payload into (whatsapp_number, message_text, message_type, media_id)."""
-    out: List[Tuple[str, str, str, Optional[str]]] = []
+) -> List[Tuple[str, str, str, Optional[str], int]]:
+    """Parse WhatsApp payload into (whatsapp_number, message_text, message_type, media_id, timestamp)."""
+    out: List[Tuple[str, str, str, Optional[str], int]] = []
     for entry in body.get("entry") or []:
         for change in entry.get("changes") or []:
             value = change.get("value") or {}
@@ -48,7 +51,8 @@ def _extract_incoming_messages(
                     media_id = (msg.get("image") or {}).get("id")
                 if typ == "audio":
                     media_id = (msg.get("audio") or {}).get("id")
-                out.append((str(from_id), text, typ, media_id))
+                ts = int(msg.get("timestamp") or 0)
+                out.append((str(from_id), text, typ, media_id, ts))
     return out
 
 
@@ -59,7 +63,16 @@ async def receive_message(request: Request) -> dict[str, str]:
         body = await request.json()
         messages = _extract_incoming_messages(body)
         logger.info("Received %d message(s) from webhook", len(messages))
-        for whatsapp_number, message_text, message_type, media_id in messages:
+        now = int(time.time())
+        for whatsapp_number, message_text, message_type, media_id, msg_ts in messages:
+            # Deduplication: ignore messages older than 30 seconds
+            if msg_ts > 0 and (now - msg_ts) > MAX_MESSAGE_AGE_SECONDS:
+                logger.info(
+                    "Dropping stale message from %s (age=%ds)",
+                    whatsapp_number,
+                    now - msg_ts,
+                )
+                continue
             await route_message(
                 whatsapp_number,
                 message_text,

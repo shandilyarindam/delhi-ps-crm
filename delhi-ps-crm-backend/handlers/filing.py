@@ -1,4 +1,4 @@
-"""Handler for complaint filing -- collects complaint text, detects duplicates, and runs AI analysis."""
+"""Handler for complaint filing -- collects complaint text or voice, detects duplicates, and runs AI analysis."""
 
 import logging
 from typing import Optional
@@ -19,15 +19,15 @@ def _ticket_display(complaint_id) -> str:
 
 
 def _format_confirmation(draft: dict) -> str:
-    """Format the AI-analyzed complaint draft into a confirmation message with ward."""
+    """Format the AI-analyzed complaint draft into a confirmation message."""
     return (
-        "Thanks -- I've noted your complaint.\n"
-        f"Category    : {draft['category']}\n"
-        f"Urgency     : {draft['urgency']}\n"
-        f"Location    : {draft['location']}\n"
-        f"Ward        : {draft.get('ward', 'Unknown')}\n"
-        f"Summary     : {draft['summary']}\n"
-        "\nReply YES to submit, NO to cancel, or send a photo as evidence."
+        "Your complaint has been recorded. Please verify the details below:\n\n"
+        f"Category : {draft['category']}\n"
+        f"Urgency  : {draft['urgency']}\n"
+        f"Location : {draft['location']}\n"
+        f"Ward     : {draft.get('ward', 'Unknown')}\n"
+        f"Summary  : {draft['summary']}\n\n"
+        "Reply YES to submit, NO to cancel, or send a photo as evidence."
     )
 
 
@@ -36,25 +36,23 @@ def _format_voice_confirmation(draft: dict) -> str:
     return (
         "Voice note received. Here is what I understood:\n\n"
         f"Transcription: {draft.get('transcription', '')}\n\n"
-        f"Category    : {draft['category']}\n"
-        f"Urgency     : {draft['urgency']}\n"
-        f"Location    : {draft['location']}\n"
-        f"Ward        : {draft.get('ward', 'Unknown')}\n"
-        f"Summary     : {draft['summary']}\n"
-        "\nReply YES to submit, NO to cancel, or send a photo as evidence."
+        f"Category : {draft['category']}\n"
+        f"Urgency  : {draft['urgency']}\n"
+        f"Location : {draft['location']}\n"
+        f"Ward     : {draft.get('ward', 'Unknown')}\n"
+        f"Summary  : {draft['summary']}\n\n"
+        "Reply YES to submit, NO to cancel, or send a photo as evidence."
     )
 
 
 def _format_duplicate(existing: dict, ticket_id: str) -> str:
     """Format the duplicate complaint notification message."""
     return (
-        "A similar complaint has already been filed.\n"
-        "\n"
+        "A similar complaint has already been filed.\n\n"
         f"Ticket   : {ticket_id}\n"
         f"Category : {existing.get('category', 'N/A')}\n"
         f"Location : {existing.get('location', 'N/A')}\n"
-        f"Status   : {existing.get('status', 'open')}\n"
-        "\n"
+        f"Status   : {existing.get('status', 'open')}\n\n"
         "Your complaint is already being tracked. "
         "Send NEW to file a different complaint or STATUS to check updates."
     )
@@ -105,7 +103,7 @@ async def handle_filing(
     else:
         await send_message(
             whatsapp_number,
-            "Please describe your issue in a text message.",
+            "Please describe your issue in a text message or send a voice note.",
         )
         return
 
@@ -144,7 +142,7 @@ async def handle_filing(
         "ward": analysis.get("ward", "Unknown"),
         "summary": analysis.get("summary", ""),
         "sentiment": analysis.get("sentiment", "Neutral"),
-        "complaint_text": text,
+        "raw_message": text,
         "photo_url": None,
     }
     if is_voice:

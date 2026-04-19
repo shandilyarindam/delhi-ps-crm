@@ -20,11 +20,12 @@ def _ticket_id_from_uuid(uid) -> str:
 def _format_registered(ticket_id: str, draft: dict) -> str:
     """Format the successful registration message with ticket details."""
     return (
-        "Your complaint has been registered!\n"
-        f"Ticket ID: {ticket_id}\n"
-        f"Category: {draft['category']}\n"
-        f"Urgency: {draft['urgency']}\n"
-        "Our team will take action shortly."
+        "Your complaint has been registered with the Delhi Civic Grievance System.\n\n"
+        f"Ticket ID : {ticket_id}\n"
+        f"Category  : {draft['category']}\n"
+        f"Urgency   : {draft['urgency']}\n\n"
+        "The concerned department has been notified. "
+        "An officer will be assigned shortly."
     )
 
 
@@ -65,7 +66,7 @@ async def handle_confirming(
         ).execute()
         await send_message(
             whatsapp_number,
-            "Photo received! Reply YES to submit or NO to cancel.",
+            "Photo evidence received. Reply YES to submit your complaint or NO to cancel.",
         )
         logger.info("Photo stored for %s", whatsapp_number)
         return
@@ -75,7 +76,7 @@ async def handle_confirming(
         if not draft.get("category"):
             await send_message(
                 whatsapp_number,
-                "Nothing to submit. Send 'new' to start a complaint.",
+                "Nothing to submit. Send NEW to start a complaint.",
             )
             return
 
@@ -90,6 +91,7 @@ async def handle_confirming(
             "summary": draft["summary"],
             "status": "open",
             "photo_url": draft.get("photo_url"),
+            "raw_message": draft.get("raw_message", ""),
         }
 
         ins = supabase.table("raw_complaints").insert(row).execute()
@@ -118,7 +120,20 @@ async def handle_confirming(
         logger.info("Complaint %s submitted by %s", ticket, whatsapp_number)
         return
 
+    if cmd == "no":
+        supabase.table("users").update(
+            {"state": "idle", "state_data": {}}
+        ).eq("whatsapp_number", whatsapp_number).execute()
+        await send_message(
+            whatsapp_number,
+            "Your complaint has been cancelled. "
+            "Send NEW to file a fresh complaint or STATUS to view existing ones.",
+        )
+        logger.info("Complaint cancelled by %s during confirmation", whatsapp_number)
+        return
+
+    # Fallback for anything that is not YES/NO and not a photo
     await send_message(
         whatsapp_number,
-        "Reply YES to submit, NO to cancel, or send a photo as evidence.",
+        "Please reply YES to submit, NO to cancel, or send a photo as evidence.",
     )

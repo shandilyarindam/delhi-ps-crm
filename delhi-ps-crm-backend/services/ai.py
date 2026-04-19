@@ -13,27 +13,48 @@ logger = logging.getLogger(__name__)
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-PROMPT_TEMPLATE = """You are an AI assistant for Delhi PS-CRM, a civic complaint system for Delhi, India.
-Analyze this complaint: "{message}"
-Respond ONLY with valid JSON, no markdown:
-{{
-  "category": "<primary category: Waste Management|Water Supply|Sewage & Drainage|Roads|Electricity|Other>",
-  "categories": ["<list of ALL relevant categories from: Waste Management, Water Supply, Sewage & Drainage, Roads, Electricity, Other>"],
-  "urgency": "<Low|Medium|High|Critical>",
-  "location": "<location mentioned or Not specified>",
-  "ward": "<Delhi ward name/number derived from the location, e.g. Rohini Sector 7 -> Rohini West Ward. If ward cannot be determined, return Unknown>",
-  "summary": "<one sentence summary>",
-  "sentiment": "<Neutral|Frustrated|Angry|Distressed|Polite>"
-}}
-Rules:
-- "category" must be the single most relevant category.
-- "categories" must include ALL relevant categories (at least one). For example, a pothole with water leaking -> ["Roads", "Water Supply"].
-- "ward" should be the Delhi municipal ward name or number. Use your knowledge of Delhi geography. If unsure, return "Unknown".
+PROMPT_TEMPLATE = """You are a civic complaint classifier for Delhi PS-CRM system.
+Analyze the citizen's complaint message and extract the following information.
+Return ONLY a valid JSON object with no newlines, no markdown, no backticks, no extra text whatsoever.
+
+Classify category as EXACTLY one of these values (case sensitive):
+- Waste Management
+- Water Supply
+- Sewage & Drainage
+- Roads
+- Electricity
+- Other
+
+Classify urgency as EXACTLY one of these values:
+- Low
+- Medium
+- High
+- Critical
+
+Classify sentiment as EXACTLY one of these values:
+- Neutral
+- Frustrated
+- Angry
+- Urgent
+
+Extract location as a specific area, sector, colony or landmark in Delhi. If no location mentioned, use "Location not specified".
+Extract summary as a single sentence under 15 words describing the core issue.
+Extract ward as the Delhi ward or zone inferred from the location. If not determinable, use "Unknown".
+Extract categories as an array of ALL relevant categories if multiple departments involved. Always include at least one.
+
+The citizen message may be in Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, or any mix. Understand and process all of them.
+
+Return this exact structure:
+{{"category":"...","categories":["..."],"urgency":"...","location":"...","ward":"...","summary":"...","sentiment":"..."}}
+
+Complaint message: "{message}"
 """
+
+VALID_SENTIMENTS = ["Neutral", "Frustrated", "Angry", "Urgent"]
 
 
 async def analyze_complaint(message: str) -> dict:
-    """Classify a complaint using Gemini AI and return structured analysis with ward and multi-category support."""
+    """Classify a complaint using Gemini AI and return structured analysis."""
     prompt = PROMPT_TEMPLATE.format(message=message)
     try:
         response = client.models.generate_content(
@@ -58,9 +79,17 @@ async def analyze_complaint(message: str) -> dict:
         else:
             result["categories"] = [c for c in categories if c in CATEGORIES] or [result["category"]]
 
+        # Validate sentiment
+        if result.get("sentiment") not in VALID_SENTIMENTS:
+            result["sentiment"] = "Neutral"
+
         # Ensure ward field exists
         if not result.get("ward"):
             result["ward"] = "Unknown"
+
+        # Ensure location field exists
+        if not result.get("location"):
+            result["location"] = "Location not specified"
 
         logger.info(
             "AI analysis complete: category=%s, categories=%s, urgency=%s, ward=%s",
@@ -76,7 +105,7 @@ async def analyze_complaint(message: str) -> dict:
             "category": "Other",
             "categories": ["Other"],
             "urgency": "Medium",
-            "location": "Not specified",
+            "location": "Location not specified",
             "ward": "Unknown",
             "summary": "",
             "sentiment": "Neutral",
@@ -87,26 +116,28 @@ async def analyze_complaint(message: str) -> dict:
             "category": "Other",
             "categories": ["Other"],
             "urgency": "Medium",
-            "location": "Not specified",
+            "location": "Location not specified",
             "ward": "Unknown",
             "summary": "",
             "sentiment": "Neutral",
         }
 
 
-AUDIO_PROMPT = """You are an AI assistant for Delhi PS-CRM.
-The attached audio is a citizen complaint in Hindi or English.
-First transcribe the audio, then analyze the complaint and respond ONLY with valid JSON:
-{
-  "transcription": "<full transcription of the audio>",
-  "category": "<Waste Management|Water Supply|Sewage & Drainage|Roads|Electricity|Other>",
-  "categories": ["<list of all relevant categories>"],
-  "urgency": "<Low|Medium|High|Critical>",
-  "location": "<location mentioned or Not specified>",
-  "ward": "<Delhi ward name or Unknown>",
-  "summary": "<one sentence summary in English>",
-  "sentiment": "<Neutral|Frustrated|Angry|Distressed|Polite>"
-}
+AUDIO_PROMPT = """You are a civic complaint classifier for Delhi PS-CRM system.
+The attached audio is a citizen complaint. It may be in Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, or any mix.
+First transcribe the audio, then analyze the complaint.
+Return ONLY a valid JSON object with no newlines, no markdown, no backticks, no extra text whatsoever.
+
+Classify category as EXACTLY one of: Waste Management, Water Supply, Sewage & Drainage, Roads, Electricity, Other
+Classify urgency as EXACTLY one of: Low, Medium, High, Critical
+Classify sentiment as EXACTLY one of: Neutral, Frustrated, Angry, Urgent
+Extract location as a specific area, sector, colony or landmark in Delhi. If no location mentioned, use "Location not specified".
+Extract summary as a single sentence under 15 words describing the core issue.
+Extract ward as the Delhi ward or zone inferred from the location. If not determinable, use "Unknown".
+Extract categories as an array of ALL relevant categories if multiple departments involved.
+
+Return this exact structure:
+{"transcription":"...","category":"...","categories":["..."],"urgency":"...","location":"...","ward":"...","summary":"...","sentiment":"..."}
 """
 
 
@@ -137,9 +168,17 @@ async def analyze_audio_complaint(audio_bytes: bytes, mime_type: str) -> dict:
         else:
             result["categories"] = [c for c in categories if c in CATEGORIES] or [result["category"]]
 
+        # Validate sentiment
+        if result.get("sentiment") not in VALID_SENTIMENTS:
+            result["sentiment"] = "Neutral"
+
         # Ensure ward field exists
         if not result.get("ward"):
             result["ward"] = "Unknown"
+
+        # Ensure location field exists
+        if not result.get("location"):
+            result["location"] = "Location not specified"
 
         # Ensure transcription exists
         if not result.get("transcription"):

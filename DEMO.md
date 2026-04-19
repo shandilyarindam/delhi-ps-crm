@@ -19,12 +19,16 @@ This document walks through the end-to-end user experience of filing a civic com
 A citizen sends any message to the Delhi PS-CRM WhatsApp number for the first time.
 
 **System response:**
-> Welcome to Delhi PS-CRM! Please tell me your name.
+> Namaskar! Welcome to the Delhi Civic Grievance Portal. I am here to help you report civic issues in your area.
+>
+> To get started, please share your full name.
 
 The citizen replies with their name (e.g., "Amit Kumar").
 
 **System response:**
-> Thanks Amit Kumar! You're registered. Reply NEW to file a complaint or STATUS to check existing ones.
+> Thank you, Amit Kumar. Your account has been created.
+>
+> Send NEW to report a civic issue or STATUS to track your existing complaints.
 
 ---
 
@@ -33,9 +37,15 @@ The citizen replies with their name (e.g., "Amit Kumar").
 The citizen sends **"new"** to start filing a complaint.
 
 **System response:**
-> Describe your issue
+> Please describe the civic issue you want to report. Include your location or area name for faster resolution.
+>
+> You can:
+> - Type your complaint in Hindi, English, Urdu, Punjabi, or any regional language
+> - Send a voice note describing the issue
+>
+> Our system will automatically understand and process your complaint.
 
-The citizen describes their complaint in **Hindi or English** (or a mix):
+The citizen describes their complaint in **any Indian regional language** (Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, or any mix):
 
 > "Rohini Sector 7 mein paani nahi aa raha hai teen din se. Bahut pareshani ho rahi hai."
 
@@ -46,22 +56,23 @@ or
 **Gemini AI** analyzes the text and responds with a structured summary:
 
 **System response:**
-> Thanks -- I've noted your complaint.
-> Category    : Water Supply
-> Urgency     : High
-> Location    : Rohini Sector 7
-> Ward        : Rohini West Ward
-> Summary     : No water supply in Rohini Sector 7 for three days.
+> Your complaint has been recorded. Please verify the details below:
+>
+> Category : Water Supply
+> Urgency  : High
+> Location : Rohini Sector 7
+> Ward     : Rohini West Ward
+> Summary  : No water supply in Rohini Sector 7 for three days.
 >
 > Reply YES to submit, NO to cancel, or send a photo as evidence.
 
-**Note:** Gemini 2.0 Flash handles Hindi, English, and mixed-language (Hinglish) input naturally. No separate translation step is needed.
+**Note:** Gemini 2.0 Flash handles Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, and other Indian regional languages naturally. No separate translation step is needed.
 
 ---
 
 ### Voice Note Filing Scenario
 
-This scenario demonstrates voice note filing. It works in Hindi, English, and mixed-language input.
+This scenario demonstrates voice note filing. It works in any Indian regional language -- Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, or any mix.
 
 User: [sends voice note saying "Rohini Sector 7 mein teen din se paani nahi aa raha"]
 
@@ -69,21 +80,23 @@ Bot: Voice note received. Here is what I understood:
 
      Transcription: Rohini Sector 7 mein teen din se paani nahi aa raha
 
-     Category    : Water Supply
-     Urgency     : High
-     Location    : Rohini Sector 7
-     Ward        : Rohini West Ward
-     Summary     : No water supply in Rohini Sector 7 for three days
+     Category : Water Supply
+     Urgency  : High
+     Location : Rohini Sector 7
+     Ward     : Rohini West Ward
+     Summary  : No water supply in Rohini Sector 7 for three days
 
      Reply YES to submit, NO to cancel, or send a photo as evidence.
 
 User: yes
 
-Bot: Your complaint has been registered.
-     Ticket   : A1B2C3D4
-     Category : Water Supply
-     Urgency  : High
-     Our team will take action shortly.
+Bot: Your complaint has been registered with the Delhi Civic Grievance System.
+
+     Ticket ID : A1B2C3D4
+     Category  : Water Supply
+     Urgency   : High
+
+     The concerned department has been notified. An officer will be assigned shortly.
 
 ---
 
@@ -92,7 +105,7 @@ Bot: Your complaint has been registered.
 The citizen can send a photo of the issue (e.g., dry taps, overflowing drains).
 
 **System response:**
-> Photo received! Reply YES to submit or NO to cancel.
+> Photo evidence received. Reply YES to submit your complaint or NO to cancel.
 
 The photo is uploaded to the `complaint-evidence` Supabase Storage bucket and linked to the complaint.
 
@@ -103,11 +116,13 @@ The photo is uploaded to the `complaint-evidence` Supabase Storage bucket and li
 The citizen replies **"yes"** to confirm.
 
 **System response:**
-> Your complaint has been registered!
-> Ticket ID: A1B2C3D4
-> Category: Water Supply
-> Urgency: High
-> Our team will take action shortly.
+> Your complaint has been registered with the Delhi Civic Grievance System.
+>
+> Ticket ID : A1B2C3D4
+> Category  : Water Supply
+> Urgency   : High
+>
+> The concerned department has been notified. An officer will be assigned shortly.
 
 The complaint is now stored in the `raw_complaints` table with status `open`. Email notifications are automatically sent to all relevant department teams (e.g., DJB for Water Supply) with ticket details and any photo evidence attached.
 
@@ -128,7 +143,46 @@ At any time, the citizen can send **"status"** to see all their complaints:
 
 ---
 
-### Step 6 -- Automatic Escalation
+### Step 6 -- Officer Assignment Notification
+
+When an officer is assigned through the admin dashboard, the citizen receives a WhatsApp notification:
+
+**System response:**
+> Update on your complaint A1B2C3D4: Officer Rajesh Sharma has been assigned to your Water Supply complaint in Rohini Sector 7. They will be in touch within 24 hours.
+
+---
+
+### Step 7 -- Resolution and Rating
+
+When the complaint is resolved through the admin dashboard, the citizen receives a resolution notification with a rating prompt:
+
+**System response:**
+> Your complaint #A1B2C3D4 has been resolved.
+>
+> Category : Water Supply
+> Location : Rohini Sector 7
+>
+> Resolution Notes: Water supply pipeline repaired. Normal supply restored.
+>
+> Please rate your experience. Reply with a number:
+> 1 - Very Dissatisfied
+> 2 - Dissatisfied
+> 3 - Neutral
+> 4 - Satisfied
+> 5 - Very Satisfied
+>
+> Your feedback helps us improve civic services in Delhi.
+
+The citizen replies with their rating (e.g., **"4"**):
+
+**System response:**
+> Thank you for your feedback. Your rating of 4/5 has been recorded.
+
+The rating is saved to the `raw_complaints` table in the `rating` column for the most recently resolved complaint.
+
+---
+
+### Step 8 -- Automatic Escalation
 
 Every 30 minutes, the **APScheduler** cron job runs the escalation check:
 
@@ -145,11 +199,11 @@ The citizen receives a notification:
 **System response:**
 > Your complaint A1B2C3D4 regarding Water Supply in Rohini Sector 7 has been escalated due to high priority.
 
-Escalation emails are also sent to all relevant department teams.
+Escalation emails are also sent to all relevant department teams, and the HoD receives a WhatsApp alert.
 
 ---
 
-### Step 7 -- Duplicate Detection
+### Step 9 -- Duplicate Detection
 
 If a citizen tries to file a complaint that matches an existing unresolved complaint (same category + location), the system detects the duplicate:
 
@@ -167,10 +221,10 @@ If a citizen tries to file a complaint that matches an existing unresolved compl
 
 ## Cancellation
 
-At any point during the complaint flow, the citizen can send **"no"** to cancel and return to the idle state.
+During the confirmation step, the citizen can send **"no"** to cancel and return to the idle state.
 
 **System response:**
-> Cancelled. Send 'new' to file another complaint.
+> Your complaint has been cancelled. Send NEW to file a fresh complaint or STATUS to view existing ones.
 
 ---
 

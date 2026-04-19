@@ -63,14 +63,14 @@ def _build_complaint_body(
 ) -> str:
     """Build the plain-text email body for a new complaint notification."""
     greeting = DEPARTMENT_GREETINGS.get(department, DEPARTMENT_GREETINGS["Other"])
-    photo_line = "[Attached below]" if complaint.get("photo_url") else "No photo provided."
+    photo_line = complaint.get("photo_url") or "No photo provided."
     reported_at = _format_timestamp(complaint.get("timestamp") or complaint.get("created_at"))
     citizen_name = user.get("name", "N/A") if user else "N/A"
     citizen_phone = user.get("whatsapp_number", "N/A") if user else "N/A"
 
     return f"""{greeting}
 
-A new civic complaint has been registered via the Delhi PS-CRM system.
+A new civic complaint has been registered via the Delhi PS-CRM Citizen Grievance Portal and requires your immediate attention.
 
 TICKET DETAILS
 ----------------------------------------------
@@ -95,10 +95,11 @@ CITIZEN DETAILS
 Name        : {citizen_name}
 WhatsApp    : {citizen_phone}
 
-Please take necessary action at the earliest.
+Please take necessary action at the earliest and update the complaint status on the portal.
 
 Regards,
-Delhi PS-CRM Automated System"""
+Delhi PS-CRM Automated System
+Civic Grievance Portal -- Government of Delhi"""
 
 
 def _build_escalation_body(
@@ -106,7 +107,7 @@ def _build_escalation_body(
 ) -> str:
     """Build the plain-text email body for an escalation alert."""
     greeting = DEPARTMENT_GREETINGS.get(department, DEPARTMENT_GREETINGS["Other"])
-    photo_line = "[Attached below]" if complaint.get("photo_url") else "No photo provided."
+    photo_line = complaint.get("photo_url") or "No photo provided."
     reported_at = _format_timestamp(complaint.get("timestamp") or complaint.get("created_at"))
 
     return f"""{greeting}
@@ -140,10 +141,11 @@ CITIZEN DETAILS
 ----------------------------------------------
 WhatsApp    : {complaint.get("whatsapp_number", "N/A")}
 
-Please take necessary action at the earliest.
+Please take necessary action at the earliest and update the complaint status on the portal.
 
 Regards,
-Delhi PS-CRM Automated System"""
+Delhi PS-CRM Automated System
+Civic Grievance Portal -- Government of Delhi"""
 
 
 def _build_mime_message(
