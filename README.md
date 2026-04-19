@@ -6,6 +6,30 @@ Citizens file complaints via WhatsApp in Hindi or English. The system uses Gemin
 
 Voice complaint filing -- citizens can send WhatsApp voice notes in Hindi or English. Gemini AI transcribes and classifies the audio in a single API call, with transcription shown to the citizen for verification before submission.
 
+---
+
+## Demo Videos
+
+https://github.com/user-attachments/assets/delhi-ps-crm-demo.mp4
+
+*Citizen files a complaint via WhatsApp in Hindi*
+
+https://github.com/user-attachments/assets/officer-assigned.mp4
+
+*Officer assigned — citizen receives WhatsApp notification*
+
+https://github.com/user-attachments/assets/complaint-resolved.mp4
+
+*Complaint resolved — citizen rates the officer*
+
+https://github.com/user-attachments/assets/frontend.mp4
+
+*ML model auto-escalates complaint — HoD notified*
+
+---
+
+## Architecture
+
 ```mermaid
 flowchart TD
   Citizen[Citizen WhatsApp] --> Meta[Meta Cloud API]
@@ -51,7 +75,7 @@ flowchart TD
 
 ---
 
-## Architecture
+## Tech Stack Used
 
 | Component                | Technology                        |
 |--------------------------|-----------------------------------|

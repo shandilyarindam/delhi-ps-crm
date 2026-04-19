@@ -4,6 +4,8 @@
 
 Delhi PS-CRM is a WhatsApp-based civic complaint management system. Citizens interact entirely through WhatsApp. The backend processes messages, classifies complaints using AI, stores data in Supabase, and auto-escalates unresolved issues using a trained ML model.
 
+## Architecture
+
 ```mermaid
 flowchart TD
   Citizen[Citizen WhatsApp] --> Meta[Meta Cloud API]
