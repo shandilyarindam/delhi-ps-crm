@@ -6,6 +6,14 @@ Citizens interact entirely through WhatsApp. No app downloads, no forms, no Engl
 
 ---
 
+## From Prototype to Production
+
+This system was originally prototyped using n8n automation workflows to validate the core complaint filing and routing logic. Once the prototype was validated, we rebuilt the entire backend as a production-grade Python FastAPI system with proper state management, ML-based escalation, voice note support, and a real-time admin dashboard.
+
+The n8n prototype enabled rapid iteration. The FastAPI backend enables scale.
+
+---
+
 ## The Problem
 
 Delhi has over 20 million citizens and no accessible, unified digital grievance system that works for everyone.
@@ -165,6 +173,19 @@ Delhi-PS-CRM/
 
 ---
 
+## How It Works
+
+1. Citizen sends a WhatsApp message in any language -- text or voice note
+2. Meta Cloud API delivers the webhook to the FastAPI backend
+3. The state machine routes the message to the appropriate handler
+4. Gemini AI classifies the complaint -- category, urgency, ward, location, sentiment extracted in one API call
+5. Complaint is stored in Supabase and the concerned department is notified via email
+6. Admin assigns an officer via the dashboard -- citizen receives WhatsApp notification
+7. Officer resolves the complaint with resolution notes -- citizen is prompted to rate experience 1 to 5
+8. ML model runs every 30 minutes -- auto-escalates based on status, urgency, and cluster count -- HoD alerted via WhatsApp and email
+
+---
+
 ## Deployment
 
 The current implementation is deployed on Railway for demonstration purposes.
@@ -197,6 +218,8 @@ The stateless architecture ensures horizontal scaling with no re-engineering -- 
 ## Team
 
 Built by **Team Delhi PS-CRM, NSUT**
+
+[Admin Dashboard Repository](https://github.com/shandilyarindam/delhi-ps-crm-dashboard)
 
 ---
 

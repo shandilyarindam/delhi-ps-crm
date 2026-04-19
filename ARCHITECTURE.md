@@ -1,3 +1,5 @@
+> **Note:** The system was originally prototyped using n8n automation workflows. The current architecture is a production FastAPI backend that replaces the prototype.
+
 # Architecture -- Delhi PS-CRM
 
 ## System Overview

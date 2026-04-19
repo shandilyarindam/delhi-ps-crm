@@ -9,6 +9,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pkl
+!delhi-ps-crm-backend/models/*.pkl
 .venv/
 venv/
 

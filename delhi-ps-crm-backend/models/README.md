@@ -37,6 +37,13 @@ The current model was trained on synthetic data for development purposes. For pr
 4. Serialize with `joblib.dump(model, "escalation_model.pkl")`
 5. Place the `.pkl` file in this directory
 
+### Performance
+
+| Metric    | Score  |
+|-----------|--------|
+| F1 Score  | 0.9273 |
+| Algorithm | GradientBoostingClassifier (scikit-learn) |
+
 ### Usage
 
 The model is loaded lazily by `services/escalation.py` and called every 30 minutes by the `services/escalation_cron.py` scheduler job.
