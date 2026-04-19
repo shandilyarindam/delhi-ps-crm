@@ -140,7 +140,7 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
 
     ws.merge_cells("A3:H3")
     ws["A3"] = (
-        "Team: Delhi PS-CRM | Document: Cost Quotation v2.0 "
+        "Team: 5Baddies | Document: Cost Quotation v2.0 "
         "| Excluding all applicable taxes | All prices in INR"
     )
     ws["A3"].font = FONT_META
@@ -402,6 +402,12 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
         1, 1000,
         "Audio API test costs for voice complaints",
     )
+    item(
+        "Phase 1", "Contingency", "Contingency Reserve",
+        "Buffer for unexpected API overages, infra spikes, or integration issues",
+        1, 2500,
+        "~5% of phase operational costs",
+    )
     phase_subtotal("Phase 1")
 
     # ────────────────────────────────────────────────────────────
@@ -451,6 +457,12 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
         "Department notification emails",
         1, 100,
         "Free tier covers 1K emails",
+    )
+    item(
+        "Phase 2", "Contingency", "Contingency Reserve",
+        "Buffer for unexpected API overages, infra spikes, or integration issues",
+        1, 2500,
+        "~5% of phase operational costs",
     )
     phase_subtotal("Phase 2")
 
@@ -524,6 +536,12 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
         0.5, 1500,
         "Dashboard goes live",
     )
+    item(
+        "Phase 3", "Contingency", "Contingency Reserve",
+        "Buffer for unexpected API overages, infra spikes, or integration issues",
+        1, 4000,
+        "~5% of phase operational costs",
+    )
     phase_subtotal("Phase 3")
 
     # ────────────────────────────────────────────────────────────
@@ -596,6 +614,12 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
         0.5, 2940,
         "Pro plan",
     )
+    item(
+        "Phase 4", "Contingency", "Contingency Reserve",
+        "Buffer for unexpected API overages, infra spikes, or integration issues",
+        1, 4000,
+        "~5% of phase operational costs",
+    )
     phase_subtotal("Phase 4")
 
     # ────────────────────────────────────────────────────────────
@@ -625,6 +649,12 @@ def build_workbook() -> Workbook:  # noqa: C901 — single builder is intentiona
          "per month", 1, 1500, "Recurring")
     item("Phase 5", "Infrastructure", "Azure Monitor log analytics",
          "per month", 1, 750, "Recurring")
+    item(
+        "Phase 5", "Contingency", "Contingency Reserve",
+        "Buffer for unexpected API overages, infra spikes, or integration issues",
+        1, 2500,
+        "~5% of phase operational costs",
+    )
     phase_subtotal("Phase 5")
 
     detail_end = row - 1
