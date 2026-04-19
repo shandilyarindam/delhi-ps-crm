@@ -1,5 +1,3 @@
-
-https://github.com/user-attachments/assets/57cc1379-9cdc-47fb-968a-a81a2af7040f
 # Delhi PS-CRM
 
 **WhatsApp-based civic complaint management system for Delhi.**
