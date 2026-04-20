@@ -58,7 +58,7 @@ async def analyze_complaint(message: str) -> dict:
     prompt = PROMPT_TEMPLATE.format(message=message)
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash", contents=prompt
+            model="gemini-2.5-flash-lite", contents=prompt
         )
         raw = response.text.strip()
         if raw.startswith("```"):
@@ -148,7 +148,7 @@ async def analyze_audio_complaint(audio_bytes: bytes, mime_type: str) -> dict:
             types.Part.from_text(AUDIO_PROMPT),
             types.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
         ]
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=parts)
+        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=parts)
         raw = (response.text or "").strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]

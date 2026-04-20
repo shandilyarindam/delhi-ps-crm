@@ -43,7 +43,7 @@ Delhi has over 20 million citizens and no accessible, unified digital grievance 
 | **WhatsApp-based** | Zero app download, works on any phone with WhatsApp |
 | **Multilingual** | Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, and more |
 | **Voice notes** | Citizens speak their complaint -- Gemini transcribes and classifies in one API call |
-| **AI classification** | Gemini 2.0 Flash extracts category, urgency, location, ward, sentiment automatically |
+| **AI classification** | Gemini 2.5 Flash-Lite extracts category, urgency, location, ward, sentiment automatically |
 | **ML escalation** | Gradient Boosting model auto-escalates based on status, urgency, and cluster count |
 | **Real-time dashboard** | Officers manage complaints via Kanban board, geospatial map, and analytics |
 | **Department routing** | Complaints routed to correct department email automatically -- multi-department support |
@@ -116,14 +116,14 @@ https://github.com/user-attachments/assets/bf4676bb-6c87-47c9-96d0-68c3e41734ea
 | Component                | Technology                        |
 |--------------------------|-----------------------------------|
 | Backend Framework        | FastAPI (Python 3.11+)            |
-| Admin Dashboard          | Next.js 14, Tailwind CSS, Recharts, Leaflet |
+| Admin Dashboard          | Next.js 16.2.4, Tailwind CSS, Recharts, Leaflet |
 | Database & Auth          | Supabase (Postgres + Storage)     |
-| AI Classification        | Google Gemini 2.0 Flash           |
+| AI Classification        | Google Gemini 2.5 Flash-Lite           |
 | Messaging Channel        | WhatsApp Business API (Meta)      |
 | Escalation Model         | GradientBoosting (scikit-learn)   |
 | Email Notifications      | Gmail SMTP                        |
 | Task Scheduling          | APScheduler (async, 30-min cycle) |
-| Deployment               | Railway (Nixpacks)                |
+| Deployment               | Railway (backend), Vercel (dashboard)                |
 
 ---
 

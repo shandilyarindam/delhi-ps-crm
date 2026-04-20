@@ -139,8 +139,13 @@ async def handle_filing(
             return
 
     elif message_type == "text":
-        if not text:
-            await send_message(whatsapp_number, "Please describe your issue.")
+        # Check for empty message or command keywords
+        command_keywords = ["new", "status", "help", "menu", "hello", "hi", "start"]
+        if not text or text.lower().strip() in command_keywords:
+            await send_message(
+                whatsapp_number, 
+                "Please describe your complaint. Include your location for faster resolution."
+            )
             return
         logger.info("Analyzing complaint from %s", whatsapp_number)
         analysis = await analyze_complaint(text)
