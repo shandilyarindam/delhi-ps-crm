@@ -64,6 +64,7 @@ export default function ManageComplaintModal({
   const [resolveError, setResolveError] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function reset() {
     setSelectedOfficer("");
@@ -79,17 +80,30 @@ export default function ManageComplaintModal({
   async function handleAssignOfficer() {
     if (!complaint || !selectedOfficer) return;
     setAssigning(true);
-    await supabase
-      .from("raw_complaints")
-      .update({
-        assigned_to: selectedOfficer,
-        assigned_at: new Date().toISOString(),
-        status: "assigned",
-      })
-      .eq("id", complaint.id);
-    setAssigning(false);
-    reset();
-    onUpdated();
+    setError(null);
+    
+    try {
+      const { error } = await supabase
+        .from("raw_complaints")
+        .update({
+          assigned_to: selectedOfficer,
+          assigned_at: new Date().toISOString(),
+          status: "assigned",
+        })
+        .eq("id", complaint.id);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      reset();
+      onUpdated();
+    } catch (err) {
+      console.error("Failed to assign officer:", err);
+      setError("Failed to assign officer. Please try again.");
+    } finally {
+      setAssigning(false);
+    }
   }
 
   async function handleMarkResolved() {
@@ -99,17 +113,30 @@ export default function ManageComplaintModal({
       return;
     }
     setResolving(true);
-    await supabase
-      .from("raw_complaints")
-      .update({
-        status: "resolved",
-        resolved_at: new Date().toISOString(),
-        officer_notes: resolveNotes.trim(),
-      })
-      .eq("id", complaint.id);
-    setResolving(false);
-    reset();
-    onUpdated();
+    setError(null);
+    
+    try {
+      const { error } = await supabase
+        .from("raw_complaints")
+        .update({
+          status: "resolved",
+          resolved_at: new Date().toISOString(),
+          officer_notes: resolveNotes.trim(),
+        })
+        .eq("id", complaint.id);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      reset();
+      onUpdated();
+    } catch (err) {
+      console.error("Failed to mark as resolved:", err);
+      setError("Failed to mark complaint as resolved. Please try again.");
+    } finally {
+      setResolving(false);
+    }
   }
 
   return (
@@ -133,6 +160,25 @@ export default function ManageComplaintModal({
 
         {complaint && (
           <div className="space-y-5">
+            {/* ── Error Display ── */}
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Error</h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p>{error}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* ── Complaint Details (Read Only) ── */}
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <div className="grid grid-cols-2 gap-3 text-sm">

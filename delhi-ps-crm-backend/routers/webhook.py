@@ -1,10 +1,13 @@
 """WhatsApp webhook router -- handles Meta verification and incoming messages."""
 
+import hashlib
+import hmac
 import logging
 import time
+from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import APIRouter, Request, Response, Query
+from fastapi import APIRouter, HTTPException, Request, Response, Query
 
 from config import WHATSAPP_VERIFY_TOKEN
 from handlers.state_machine import route_message
@@ -14,6 +17,31 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MAX_MESSAGE_AGE_SECONDS = 30
+MAX_REQUESTS_PER_MINUTE = 100
+RATE_LIMIT_WINDOW = 60  # seconds
+
+# In-memory rate limiting store (for production, use Redis)
+_rate_limit_store: Dict[str, List[float]] = defaultdict(list)
+
+
+def _is_rate_limited(phone_number: str) -> bool:
+    """Check if phone number has exceeded rate limit."""
+    now = time.time()
+    window_start = now - RATE_LIMIT_WINDOW
+    
+    # Clean old entries
+    _rate_limit_store[phone_number] = [
+        timestamp for timestamp in _rate_limit_store[phone_number]
+        if timestamp > window_start
+    ]
+    
+    # Check if under limit
+    if len(_rate_limit_store[phone_number]) >= MAX_REQUESTS_PER_MINUTE:
+        return True
+    
+    # Add current request
+    _rate_limit_store[phone_number].append(now)
+    return False
 
 
 @router.get("/webhook")
@@ -56,12 +84,55 @@ def _extract_incoming_messages(
     return out
 
 
+def _verify_signature(body: bytes, signature: str) -> bool:
+    """Verify HMAC-SHA256 signature from Meta webhook."""
+    if not signature or not signature.startswith("sha256="):
+        return False
+    
+    signature_hash = signature[7:]  # Remove 'sha256=' prefix
+    expected_hash = hmac.new(
+        WHATSAPP_VERIFY_TOKEN.encode(),
+        body,
+        hashlib.sha256
+    ).hexdigest()
+    
+    return hmac.compare_digest(signature_hash, expected_hash)
+
+
 @router.post("/webhook")
 async def receive_message(request: Request) -> dict[str, str]:
     """Receive and process incoming WhatsApp messages from the Meta webhook."""
+    # Verify signature
+    signature = request.headers.get("x-hub-signature-256")
+    if not signature:
+        logger.warning("Webhook request missing signature header")
+        raise HTTPException(status_code=403, detail="Missing signature")
+    
+    body = await request.body()
+    if not _verify_signature(body, signature):
+        logger.warning("Webhook signature verification failed")
+        raise HTTPException(status_code=403, detail="Invalid signature")
+    
+    # Parse body for rate limiting
     try:
-        body = await request.json()
-        messages = _extract_incoming_messages(body)
+        body_json = await request.json()
+    except Exception as exc:
+        logger.error("Failed to parse webhook JSON for rate limiting: %s", exc)
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    
+    # Extract phone numbers for rate limiting
+    messages = _extract_incoming_messages(body_json)
+    for whatsapp_number, _, _, _, _ in messages:
+        if _is_rate_limited(whatsapp_number):
+            logger.warning("Rate limit exceeded for %s", whatsapp_number)
+            raise HTTPException(
+                status_code=429, 
+                detail="Rate limit exceeded. Please try again later."
+            )
+    
+    # Process the already parsed body_json
+    try:
+        messages = _extract_incoming_messages(body_json)
         logger.info("Received %d message(s) from webhook", len(messages))
         now = int(time.time())
         for whatsapp_number, message_text, message_type, media_id, msg_ts in messages:
@@ -80,7 +151,13 @@ async def receive_message(request: Request) -> dict[str, str]:
                 media_id=media_id,
             )
     except ValueError as exc:
-        logger.error("Invalid JSON in webhook POST: %s", exc)
-    except Exception:
-        logger.exception("Webhook POST handling failed")
+        logger.error("Value error processing webhook messages: %s", exc)
+        raise HTTPException(status_code=400, detail="Invalid message format")
+    except KeyError as exc:
+        logger.error("Missing required field in webhook messages: %s", exc)
+        raise HTTPException(status_code=400, detail="Invalid message structure")
+    except Exception as exc:
+        logger.exception("Unexpected error processing webhook messages: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal processing error")
+    
     return {"status": "ok"}

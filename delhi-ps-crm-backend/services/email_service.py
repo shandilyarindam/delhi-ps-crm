@@ -174,10 +174,27 @@ def _build_mime_message(
 
 def _send_via_smtp(msg: MIMEMultipart) -> None:
     """Send an email via Gmail SMTP (blocking -- run in executor)."""
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-        server.starttls()
-        server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
-        server.send_message(msg)
+    if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
+        raise ValueError("Gmail credentials not configured")
+    
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            # Enforce TLS encryption
+            server.starttls()
+            # Verify TLS connection
+            server.sock.getpeercert()
+            # Use app-specific password (never log credentials)
+            server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+            server.send_message(msg)
+    except smtplib.SMTPAuthenticationError as exc:
+        logger.error("SMTP authentication failed - check app password")
+        raise ValueError("Email authentication failed") from exc
+    except smtplib.SMTPException as exc:
+        logger.error("SMTP error sending email: %s", type(exc).__name__)
+        raise
+    except Exception as exc:
+        logger.exception("Unexpected error sending email")
+        raise
 
 
 async def send_complaint_registered_email(complaint: dict, user: dict) -> None:

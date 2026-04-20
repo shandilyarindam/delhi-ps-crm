@@ -1,6 +1,8 @@
 """Handler for complaint filing -- collects complaint text or voice, detects duplicates, and runs AI analysis."""
 
+import asyncio
 import logging
+import time
 from typing import Optional
 
 import httpx
@@ -77,20 +79,62 @@ async def handle_filing(
             )
             return
 
-        try:
-            audio_bytes, mime_type = await _download_whatsapp_audio(media_id)
-            mime_type = mime_type or "audio/ogg"
-            analysis = await analyze_audio_complaint(audio_bytes, mime_type)
-            transcription = (analysis.get("transcription") or "").strip()
-            if not transcription:
-                raise ValueError("Empty transcription")
-            text = transcription
-            is_voice = True
-        except Exception:
-            logger.exception("Audio complaint processing failed for %s", whatsapp_number)
+        max_retries = 3
+        retry_delay = 1
+        for attempt in range(max_retries):
+            try:
+                audio_bytes, mime_type = await _download_whatsapp_audio(media_id)
+                mime_type = mime_type or "audio/ogg"
+                analysis = await analyze_audio_complaint(audio_bytes, mime_type)
+                transcription = (analysis.get("transcription") or "").strip()
+                if not transcription:
+                    raise ValueError("Empty transcription")
+                text = transcription
+                is_voice = True
+                break
+            except httpx.RequestError as exc:
+                logger.error("Network error downloading audio for %s: %s", whatsapp_number, exc)
+                await send_message(
+                    whatsapp_number,
+                    "Sorry, I could not download your voice note. Please try again or type your complaint.",
+                )
+                retry_delay *= 2
+                await asyncio.sleep(retry_delay)
+            except httpx.HTTPStatusError as exc:
+                logger.error("HTTP error downloading audio for %s: %s", whatsapp_number, exc)
+                await send_message(
+                    whatsapp_number,
+                    "Sorry, I could not download your voice note. Please try again or type your complaint.",
+                )
+                retry_delay *= 2
+                await asyncio.sleep(retry_delay)
+            except ValueError as exc:
+                logger.error("Invalid audio data for %s: %s", whatsapp_number, exc)
+                await send_message(
+                    whatsapp_number,
+                    "Sorry, your voice note format is not supported. Please type your complaint.",
+                )
+                break
+            except asyncio.TimeoutError as exc:
+                logger.error("Timeout error downloading audio for %s: %s", whatsapp_number, exc)
+                await send_message(
+                    whatsapp_number,
+                    "Sorry, I could not download your voice note. Please try again or type your complaint.",
+                )
+                retry_delay *= 2
+                await asyncio.sleep(retry_delay)
+            except Exception as exc:
+                logger.exception("Unexpected error processing audio for %s", whatsapp_number)
+                await send_message(
+                    whatsapp_number,
+                    "Sorry, I could not process your voice note. Please type your complaint instead.",
+                )
+                break
+        else:
+            logger.error("Failed to download audio after %d retries", max_retries)
             await send_message(
                 whatsapp_number,
-                "Sorry, I could not process your voice note. Please type your complaint instead.",
+                "Sorry, I could not download your voice note. Please try again or type your complaint.",
             )
             return
 

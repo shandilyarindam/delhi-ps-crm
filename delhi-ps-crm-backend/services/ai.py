@@ -187,7 +187,25 @@ async def analyze_audio_complaint(audio_bytes: bytes, mime_type: str) -> dict:
         return result
     except json.JSONDecodeError as exc:
         logger.error("Failed to parse Gemini audio response as JSON: %s", exc)
-        raise
+        return {
+            "transcription": "",
+            "category": "Other",
+            "categories": ["Other"],
+            "urgency": "Medium",
+            "location": "Location not specified",
+            "ward": "Unknown",
+            "summary": "",
+            "sentiment": "Neutral",
+        }
     except Exception as exc:
         logger.exception("Gemini audio analysis failed: %s", exc)
-        raise
+        return {
+            "transcription": "",
+            "category": "Other",
+            "categories": ["Other"],
+            "urgency": "Medium",
+            "location": "Location not specified",
+            "ward": "Unknown",
+            "summary": "",
+            "sentiment": "Neutral",
+        }
