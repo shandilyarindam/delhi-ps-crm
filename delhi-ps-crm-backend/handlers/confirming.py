@@ -49,7 +49,26 @@ async def handle_confirming(
         return
 
     state_data = user.get("state_data") or {}
-    draft = state_data.get("draft") or {}
+    draft = {}
+    
+    # Try to get draft from database first (persistent storage)
+    draft_id = state_data.get("draft_id")
+    if draft_id:
+        draft_res = (
+            supabase.table("complaint_drafts")
+            .select("*")
+            .eq("id", draft_id)
+            .eq("whatsapp_number", whatsapp_number)
+            .eq("status", "draft")
+            .limit(1)
+            .execute()
+        )
+        if draft_res.data:
+            draft = draft_res.data[0].get("draft_data") or {}
+    
+    # Fallback to in-memory state_data if database draft not found
+    if not draft:
+        draft = state_data.get("draft") or {}
 
     if message_type == "image" and media_id:
         url = await store_whatsapp_image(media_id, whatsapp_number)
@@ -60,10 +79,19 @@ async def handle_confirming(
             )
             return
         draft["photo_url"] = url
-        state_data["draft"] = draft
-        supabase.table("users").update({"state_data": state_data}).eq(
-            "whatsapp_number", whatsapp_number
-        ).execute()
+        
+        # Update draft in database if we have a draft_id
+        draft_id = state_data.get("draft_id")
+        if draft_id:
+            supabase.table("complaint_drafts").update({
+                "draft_data": draft
+            }).eq("id", draft_id).eq("whatsapp_number", whatsapp_number).execute()
+        else:
+            # Fallback to in-memory state_data
+            state_data["draft"] = draft
+            supabase.table("users").update({"state_data": state_data}).eq(
+                "whatsapp_number", whatsapp_number
+            ).execute()
         await send_message(
             whatsapp_number,
             "Photo evidence received. Reply YES to submit your complaint or NO to cancel.",
@@ -114,6 +142,11 @@ async def handle_confirming(
         except Exception as exc:
             logger.error("Email notification failed for ticket %s: %s", ticket, exc)
 
+        # Clean up draft from database
+        draft_id = state_data.get("draft_id")
+        if draft_id:
+            supabase.table("complaint_drafts").delete().eq("id", draft_id).eq("whatsapp_number", whatsapp_number).execute()
+        
         supabase.table("users").update(
             {"state": "idle", "state_data": {}}
         ).eq("whatsapp_number", whatsapp_number).execute()
@@ -121,6 +154,11 @@ async def handle_confirming(
         return
 
     if cmd == "no":
+        # Clean up draft from database
+        draft_id = state_data.get("draft_id")
+        if draft_id:
+            supabase.table("complaint_drafts").delete().eq("id", draft_id).eq("whatsapp_number", whatsapp_number).execute()
+        
         supabase.table("users").update(
             {"state": "idle", "state_data": {}}
         ).eq("whatsapp_number", whatsapp_number).execute()

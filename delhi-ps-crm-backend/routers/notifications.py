@@ -55,7 +55,7 @@ async def notify_assignment(request: Request) -> dict[str, str]:
                 f"Category : {category}\n"
                 f"Location : {location}\n\n"
                 f"Resolution Notes: {officer_notes}\n\n"
-                "Please rate your experience. Reply with a number:\n"
+                "Please rate your experience with our service. Reply with a number:\n\n"
                 "1 - Very Dissatisfied\n"
                 "2 - Dissatisfied\n"
                 "3 - Neutral\n"
@@ -64,7 +64,14 @@ async def notify_assignment(request: Request) -> dict[str, str]:
                 "Your feedback helps us improve civic services in Delhi."
             )
             await send_message(whatsapp_number, msg)
-            logger.info("Resolution notification sent for ticket %s to %s", ticket_id, whatsapp_number)
+            
+            # Set user state to AWAITING_RATING with complaint_id reference
+            supabase.table("users").update({
+                "state": "awaiting_rating",
+                "state_data": {"complaint_id": cid}
+            }).eq("whatsapp_number", whatsapp_number).execute()
+            
+            logger.info("Resolution notification sent for ticket %s to %s, user set to awaiting_rating", ticket_id, whatsapp_number)
 
     except Exception as exc:
         logger.exception("Notification handling failed: %s", exc)

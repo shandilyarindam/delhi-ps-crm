@@ -122,6 +122,5 @@ async def handle_idle(whatsapp_number: str, message_text: str) -> None:
     # Fallback for unrecognized input
     await send_message(
         whatsapp_number,
-        "I could not understand your message. "
-        "Please send NEW to report a civic issue or STATUS to check your complaint history.",
+        "Send NEW to file a complaint or STATUS to check existing ones.",
     )

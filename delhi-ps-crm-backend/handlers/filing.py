@@ -140,8 +140,10 @@ async def handle_filing(
 
     elif message_type == "text":
         # Check for empty message or command keywords
-        command_keywords = ["new", "status", "help", "menu", "hello", "hi", "start"]
-        if not text or text.lower().strip() in command_keywords:
+        command_keywords = ["new", "status", "help", "menu", "hello", "hi", "start", "yes", "no"]
+        text_lower = text.lower().strip()
+        
+        if not text or text_lower in command_keywords or len(text) < 10:
             await send_message(
                 whatsapp_number, 
                 "Please describe your complaint. Include your location for faster resolution."
@@ -196,12 +198,37 @@ async def handle_filing(
     }
     if is_voice:
         draft["transcription"] = (analysis.get("transcription") or "").strip()
-    supabase.table("users").update(
-        {
-            "state": "confirming",
-            "state_data": {"draft": draft},
-        }
-    ).eq("whatsapp_number", whatsapp_number).execute()
+    
+    # Store draft persistently in database
+    draft_record = {
+        "whatsapp_number": whatsapp_number,
+        "draft_data": draft,
+        "status": "draft"
+    }
+    
+    # Remove any existing draft for this user
+    supabase.table("complaint_drafts").delete().eq("whatsapp_number", whatsapp_number).execute()
+    
+    # Insert new draft
+    draft_result = supabase.table("complaint_drafts").insert(draft_record).execute()
+    
+    if draft_result.data:
+        draft_id = draft_result.data[0]["id"]
+        # Update user state with draft ID reference
+        supabase.table("users").update(
+            {
+                "state": "confirming",
+                "state_data": {"draft_id": draft_id},
+            }
+        ).eq("whatsapp_number", whatsapp_number).execute()
+    else:
+        # Fallback to in-memory if database insert fails
+        supabase.table("users").update(
+            {
+                "state": "confirming",
+                "state_data": {"draft": draft},
+            }
+        ).eq("whatsapp_number", whatsapp_number).execute()
     await send_message(
         whatsapp_number,
         _format_voice_confirmation(draft) if is_voice else _format_confirmation(draft),

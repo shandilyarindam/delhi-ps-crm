@@ -7,7 +7,7 @@ from google import genai
 from google.genai import types
 
 from config import GEMINI_API_KEY
-from constants import CATEGORIES
+from constants import CATEGORIES, WARD_MAPPINGS
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +53,84 @@ Complaint message: "{message}"
 VALID_SENTIMENTS = ["Neutral", "Frustrated", "Angry", "Urgent"]
 
 
+def _detect_ward(location: str) -> str:
+    """Detect ward from location using comprehensive mappings."""
+    if not location or location == "Location not specified":
+        return "Unknown"
+    
+    location_lower = location.lower().strip()
+    
+    # Direct mapping lookup
+    if location_lower in WARD_MAPPINGS:
+        return WARD_MAPPINGS[location_lower]
+    
+    # Partial matching for locations that contain ward names
+    for key, ward in WARD_MAPPINGS.items():
+        if key in location_lower or location_lower in key:
+            return ward
+    
+    # Check for common Delhi area patterns
+    if "sector" in location_lower:
+        # Extract sector number and try to match
+        for key, ward in WARD_MAPPINGS.items():
+            if "sector" in key and key.split()[-1] in location_lower:
+                return ward
+    
+    return "Unknown"
+
+
+def _enhanced_prompt_with_ward_context(message: str) -> str:
+    """Enhance prompt with ward mapping context for better detection."""
+    ward_context = "\nDelhi Ward Mappings for reference:\n"
+    # Include key ward mappings in the prompt
+    sample_wards = list(WARD_MAPPINGS.items())[:20]  # First 20 mappings to keep prompt reasonable
+    for location, ward in sample_wards:
+        ward_context += f"- {location.title()} -> {ward}\n"
+    ward_context += "...and many more locations.\n\n"
+    
+    base_prompt = """You are a civic complaint classifier for Delhi PS-CRM system.
+Analyze the citizen's complaint message and extract the following information.
+Return ONLY a valid JSON object with no newlines, no markdown, no backticks, no extra text whatsoever.
+
+Classify category as EXACTLY one of these values (case sensitive):
+- Waste Management
+- Water Supply
+- Sewage & Drainage
+- Roads
+- Electricity
+- Other
+
+Classify urgency as EXACTLY one of these values:
+- Low
+- Medium
+- High
+- Critical
+
+Classify sentiment as EXACTLY one of these values:
+- Neutral
+- Frustrated
+- Angry
+- Urgent
+
+Extract location as a specific area, sector, colony or landmark in Delhi. If no location mentioned, use "Location not specified".
+Extract summary as a single sentence under 15 words describing the core issue.
+Extract ward as the Delhi ward or zone inferred from the location. Use the ward mappings above for accurate detection. If not determinable, use "Unknown".
+Extract categories as an array of ALL relevant categories if multiple departments involved. Always include at least one.
+
+The citizen message may be in Hindi, English, Urdu, Punjabi, Haryanvi, Bhojpuri, Hinglish, or any mix. Understand and process all of them.
+
+Return this exact structure:
+{{"category":"...","categories":["..."],"urgency":"...","location":"...","ward":"...","summary":"...","sentiment":"..."}}
+
+Complaint message: "{message}"
+"""
+    
+    return ward_context + base_prompt
+
+
 async def analyze_complaint(message: str) -> dict:
     """Classify a complaint using Gemini AI and return structured analysis."""
-    prompt = PROMPT_TEMPLATE.format(message=message)
+    prompt = _enhanced_prompt_with_ward_context(message)
     try:
         response = client.models.generate_content(
             model="gemini-2.5-flash-lite", contents=prompt
@@ -83,8 +158,12 @@ async def analyze_complaint(message: str) -> dict:
         if result.get("sentiment") not in VALID_SENTIMENTS:
             result["sentiment"] = "Neutral"
 
-        # Ensure ward field exists
-        if not result.get("ward"):
+        # Enhanced ward detection using mappings
+        location = result.get("location", "Location not specified")
+        detected_ward = _detect_ward(location)
+        if detected_ward != "Unknown":
+            result["ward"] = detected_ward
+        elif not result.get("ward"):
             result["ward"] = "Unknown"
 
         # Ensure location field exists
@@ -172,8 +251,12 @@ async def analyze_audio_complaint(audio_bytes: bytes, mime_type: str) -> dict:
         if result.get("sentiment") not in VALID_SENTIMENTS:
             result["sentiment"] = "Neutral"
 
-        # Ensure ward field exists
-        if not result.get("ward"):
+        # Enhanced ward detection using mappings
+        location = result.get("location", "Location not specified")
+        detected_ward = _detect_ward(location)
+        if detected_ward != "Unknown":
+            result["ward"] = detected_ward
+        elif not result.get("ward"):
             result["ward"] = "Unknown"
 
         # Ensure location field exists

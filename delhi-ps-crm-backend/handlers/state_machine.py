@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 from config import supabase
+from handlers.awaiting_rating import handle_awaiting_rating
 from handlers.confirming import handle_confirming
 from handlers.filing import handle_filing
 from handlers.idle import handle_idle
@@ -58,6 +59,8 @@ async def route_message(
             message_type=message_type,
             media_id=media_id,
         )
+    elif state == "awaiting_rating":
+        await handle_awaiting_rating(whatsapp_number, message_text)
     else:
         logger.warning(
             "Unknown user state %r for %s; resetting to idle", state, whatsapp_number
