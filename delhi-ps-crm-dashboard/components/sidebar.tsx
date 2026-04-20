@@ -84,7 +84,7 @@ export default function Sidebar() {
             <span className="text-base font-bold tracking-tight text-[#1B3A5C]">
               Delhi PS-CRM
             </span>
-            <p className="text-[10px] text-slate-500">Civic Grievance Portal</p>
+            <p className="text-[10px] text-slate-500">Every complaint heard. Every issue resolved.</p>
           </div>
           <button
             onClick={() => setMobileOpen(false)}
@@ -155,7 +155,7 @@ export default function Sidebar() {
           <span className="text-lg font-bold tracking-tight text-[#1B3A5C]">
             Delhi PS-CRM
           </span>
-          <span className="text-xs text-slate-500">Civic Grievance Portal</span>
+          <span className="text-xs text-slate-500">Every complaint heard. Every issue resolved.</span>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">

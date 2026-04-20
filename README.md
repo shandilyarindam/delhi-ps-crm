@@ -6,6 +6,16 @@ Citizens interact entirely through WhatsApp. No app downloads, no forms, no Engl
 
 ---
 
+## Resources
+
+- [Demo Video](https://youtu.be/-ijPRAcV_T0?si=4b6ALCIpxPtBtqHP)
+- [Project Drive](https://drive.google.com/drive/folders/1b-VXsEavW6BJ71RT0Z1fzjyHT-kOoPHo)
+- [ML Model — Google Colab](https://colab.research.google.com/drive/1eMmbXmLwrAfmpn6QCj4pGfKrsuKsjtQl?usp=sharing)
+- [Cost Quotation Sheet](https://docs.google.com/spreadsheets/d/1Bt7-JaH7GhQL478bQmCY_5DWysrhF641/edit?usp=drivesdk&ouid=114737713209928965969&rtpof=true&sd=true)
+- [Live Dashboard](https://delhi-ps-ht51iqu05-shandilyarindams-projects.vercel.app/)
+
+---
+
 ## From Prototype to Production
 
 This system was originally prototyped using n8n automation workflows to validate the core complaint filing and routing logic. Once the prototype was validated, we rebuilt the entire backend as a production-grade Python FastAPI system with proper state management, ML-based escalation, voice note support, and a real-time admin dashboard.
@@ -217,9 +227,9 @@ The stateless architecture ensures horizontal scaling with no re-engineering -- 
 
 ## Team
 
-Built by **Team Delhi PS-CRM, NSUT**
+Built by **Team 5Baddies, NSUT**
 
-[Admin Dashboard Repository](https://github.com/shandilyarindam/delhi-ps-crm-dashboard)
+[Admin Dashboard Repository](https://github.com/shandilyarindam/delhi-ps-crm/tree/main/delhi-ps-crm-dashboard)
 
 ---
 
