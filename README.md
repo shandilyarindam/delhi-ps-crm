@@ -12,7 +12,7 @@ Citizens interact entirely through WhatsApp. No app downloads, no forms, no Engl
 - [Project Drive](https://drive.google.com/drive/folders/1b-VXsEavW6BJ71RT0Z1fzjyHT-kOoPHo)
 - [ML Model — Google Colab](https://colab.research.google.com/drive/1eMmbXmLwrAfmpn6QCj4pGfKrsuKsjtQl?usp=sharing)
 - [Cost Quotation Sheet](https://docs.google.com/spreadsheets/d/1Bt7-JaH7GhQL478bQmCY_5DWysrhF641/edit?usp=drivesdk&ouid=114737713209928965969&rtpof=true&sd=true)
-- [Live Dashboard](https://delhi-ps-ht51iqu05-shandilyarindams-projects.vercel.app/)
+- [Live Dashboard](https://project-tf415.vercel.app)
 
 ---
 
@@ -229,7 +229,6 @@ The stateless architecture ensures horizontal scaling with no re-engineering -- 
 
 Built by **Team 5Baddies, NSUT**
 
-[Admin Dashboard Repository](https://github.com/shandilyarindam/delhi-ps-crm/tree/main/delhi-ps-crm-dashboard)
 
 ---
 
