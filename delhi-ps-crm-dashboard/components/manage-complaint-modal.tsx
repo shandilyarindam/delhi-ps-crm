@@ -214,7 +214,7 @@ export default function ManageComplaintModal({
                 <div className="flex items-center gap-2">
                   <Select
                     value={selectedOfficer}
-                    onValueChange={(value: string) => setSelectedOfficer(value)}
+                    onValueChange={(value: string | null) => setSelectedOfficer(value ?? "")}
                   >
                     <SelectTrigger className="flex-1 bg-white">
                       <SelectValue placeholder="Select an officer" />
