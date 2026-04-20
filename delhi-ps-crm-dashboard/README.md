@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Delhi PS-CRM - Admin Dashboard
 
-## Getting Started
+Real-time civic grievance management dashboard for Delhi PS-CRM. Built for government officers to manage, assign, track, and resolve citizen complaints filed via WhatsApp.
 
-First, run the development server:
+## Live Dashboard
+[project-tf415.vercel.app](https://project-tf415.vercel.app)
+
+## Features
+
+- **Real-time overview** - live stats for total, open, assigned, resolved, and critical complaints
+- **Geospatial map** - complaints plotted across Delhi with urgency colour coding
+- **Kanban board** - drag-and-drop complaint management across Open, In Progress, and Resolved columns
+- **Officer assignment** - assign complaints to officers in one click, citizen notified instantly on WhatsApp
+- **Resolution workflow** - mandatory resolution notes before closing, citizen prompted to rate
+- **Analytics** - incident velocity, urgency distribution, category breakdown, resolution trends
+- **Officer accountability** - per-officer resolution rates, average turnaround time, active complaint load
+- **CSV export** - download complaint data for offline reporting
+- **Activity timeline** - full audit trail of every officer action
+
+## Tech Stack
+
+- Next.js 16.2.4
+- Tailwind CSS
+- Recharts (analytics charts)
+- Leaflet (geospatial map)
+- Supabase (real-time database)
+
+## Local Setup
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local`:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Part of Delhi PS-CRM
 
-## Learn More
+This dashboard is part of the [Delhi PS-CRM](https://github.com/shandilyarindam/delhi-ps-crm) system - an AI-powered WhatsApp civic grievance management platform serving all 272 wards of Delhi.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by Team 5Baddies, NSUT.

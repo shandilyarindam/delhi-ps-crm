@@ -36,7 +36,6 @@ class Settings(BaseSettings):
     hod_whatsapp_number: Optional[str] = Field(None, description="HoD WhatsApp number")
     
     # Optional configuration
-    openai_api_key: Optional[str] = Field(None, description="OpenAI API key (optional)")
     gmail_address: Optional[str] = Field(None, description="Gmail address for notifications")
     gmail_app_password: Optional[str] = Field(None, description="Gmail app-specific password")
     
@@ -111,7 +110,6 @@ GEMINI_API_KEY = settings.gemini_api_key
 SUPABASE_URL = str(settings.supabase_url)
 SUPABASE_KEY = settings.supabase_service_key or os.getenv('SUPABASE_KEY', '')  # Fallback to anon key
 HOD_WHATSAPP_NUMBER = settings.hod_whatsapp_number
-OPENAI_API_KEY = settings.openai_api_key
 GMAIL_ADDRESS = settings.gmail_address
 GMAIL_APP_PASSWORD = settings.gmail_app_password
 
