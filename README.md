@@ -55,45 +55,30 @@ Delhi has over 20 million citizens and no accessible, unified digital grievance 
 
 ```mermaid
 flowchart TD
-  Citizen[Citizen WhatsApp] --> Meta[Meta Cloud API]
-  Meta --> Webhook[Webhook POST webhook]
-  Webhook --> Backend[FastAPI Backend]
-  Backend --> StateMachine[State machine]
-
-  StateMachine --> Registration[Registration handler]
-  StateMachine --> Idle[Idle handler]
-  StateMachine --> Filing[Filing handler]
-  StateMachine --> Confirming[Confirming handler]
-
-  Filing --> TextIn[Text complaint]
-  Filing --> AudioIn[Voice note]
-  AudioIn --> AudioDl[Download audio]
-  AudioDl --> AudioAI[Gemini audio transcribe and classify]
-  TextIn --> TextAI[Gemini classify]
-  TextAI --> Duplicate[Duplicate check]
-  AudioAI --> Duplicate
-  Duplicate -->|duplicate| DupNotify[Notify citizen and reset]
-  Duplicate -->|unique| Confirming
-
-  Confirming -->|photo| Storage[Supabase Storage evidence]
-  Confirming -->|yes| Insert[Insert raw complaints]
-
-  Insert --> Postgres[Supabase Postgres]
-  Insert --> Ticket[Send ticket WhatsApp]
-  Insert --> EmailDept[Email departments Gmail]
-
-  Backend --> Scheduler[APScheduler every 30 min]
-  Scheduler --> EscCron[Escalation cron]
-  EscCron --> Model[ML model Gradient Boosting]
-  Model -->|escalate| Escalate[Update status escalated]
-  Escalate --> EscCitizen[WhatsApp citizen]
-  Escalate --> EscHod[WhatsApp HoD]
-  Escalate --> EscEmail[Email departments]
-
-  Postgres --> SupWebhook[Supabase webhook]
-  SupWebhook --> NotifRouter[Notifications router]
-  NotifRouter -->|assigned| AssignedMsg[WhatsApp citizen assigned]
-  NotifRouter -->|resolved| ResolvedMsg[WhatsApp citizen resolved]
+    A[ Citizen] -->|Text / Voice / Photo| B[WhatsApp\nMeta Cloud API]
+    B -->|POST /webhook| C[FastAPI Backend\nRailway]
+    C --> D{HMAC Signature\nVerification}
+    D -->|Invalid| E[ 401 Rejected]
+    D -->|Valid| F{Rate Limiting\n100 req/min per number}
+    F -->|Exceeded| G[ 429 Too Many Requests]
+    F -->|OK| H{30-second\nDeduplication}
+    H -->|Duplicate| I[ Ignored]
+    H -->|New Message| J[State Machine Router]
+    J --> K{Current\nUser State}
+    K -->|new user / registering| L[registration.py\nCollect name]
+    K -->|idle| M[idle.py\nNEW / STATUS commands]
+    K -->|filing| N[filing.py\nGemini 2.5 Flash-Lite\nAI Classification]
+    K -->|confirming| O[confirming.py\nYES / NO / Photo]
+    K -->|awaiting_photo| P[awaiting_photo.py\nSupabase Storage Upload]
+    K -->|awaiting_rating| Q[awaiting_rating.py\n1-5 Rating Collection]
+    N --> R[Supabase\nPostgres Database]
+    L --> R
+    M --> R
+    O --> R
+    P --> R
+    Q --> R
+    R --> S[WhatsApp Response\nvia Meta Cloud API]
+    S --> A
 ```
 
 ---
