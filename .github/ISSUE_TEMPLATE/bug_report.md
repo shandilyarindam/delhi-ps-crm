@@ -14,8 +14,8 @@ assignees: ''
 
 ### Component Affected
 <!-- Check the relevant component(s). -->
-- [ ] WhatsApp Bot (n8n workflows)
-- [ ] AI Classification (OpenAI)
+- [ ] WhatsApp Bot (FastAPI)
+- [ ] AI Classification (Gemini 2.5 Flash-Lite)
 - [ ] Dashboard - Complaints Tab
 - [ ] Dashboard - Analytics Tab
 - [ ] Dashboard - Map Tab

@@ -19,8 +19,8 @@ assignees: ''
 
 ### Component
 <!-- Which part of the system would this feature belong to? -->
-- [ ] WhatsApp Bot (citizen-facing)
-- [ ] AI / Classification
+- [ ] WhatsApp Bot (FastAPI)
+- [ ] AI Classification (Gemini 2.5 Flash-Lite)
 - [ ] Dashboard - New Tab
 - [ ] Dashboard - Complaints Tab
 - [ ] Dashboard - Analytics Tab
