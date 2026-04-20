@@ -10,15 +10,30 @@ The request flow follows a stateless, horizontally scalable architecture:
 
 ```mermaid
 flowchart TD
-    A[WhatsApp Message] --> B[Meta Cloud API]
-    B --> C[POST /webhook FastAPI]
-    C --> D[HMAC Signature Verification]
-    D --> E[Rate Limiting 100 req/min]
-    E --> F[30-second Deduplication]
-    F --> G[State Machine Router]
-    G --> H[Handler Processing]
-    H --> I[Supabase Database Operations]
-    I --> J[WhatsApp Response Generation]
+    A[ Citizen] -->|Text / Voice / Photo| B[WhatsApp\nMeta Cloud API]
+    B -->|POST /webhook| C[FastAPI Backend\nRailway]
+    C --> D{HMAC Signature\nVerification}
+    D -->|Invalid| E[ 401 Rejected]
+    D -->|Valid| F{Rate Limiting\n100 req/min per number}
+    F -->|Exceeded| G[ 429 Too Many Requests]
+    F -->|OK| H{30-second\nDeduplication}
+    H -->|Duplicate| I[ Ignored]
+    H -->|New Message| J[State Machine Router]
+    J --> K{Current\nUser State}
+    K -->|new user / registering| L[registration.py\nCollect name]
+    K -->|idle| M[idle.py\nNEW / STATUS commands]
+    K -->|filing| N[filing.py\nGemini 2.5 Flash-Lite\nAI Classification]
+    K -->|confirming| O[confirming.py\nYES / NO / Photo]
+    K -->|awaiting_photo| P[awaiting_photo.py\nSupabase Storage Upload]
+    K -->|awaiting_rating| Q[awaiting_rating.py\n1-5 Rating Collection]
+    N --> R[Supabase\nPostgres Database]
+    L --> R
+    M --> R
+    O --> R
+    P --> R
+    Q --> R
+    R --> S[WhatsApp Response\nvia Meta Cloud API]
+    S --> A
 ```
 
 ## Complete State Machine
