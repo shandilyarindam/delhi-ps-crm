@@ -8,17 +8,17 @@ Delhi PS-CRM is an AI-powered WhatsApp civic grievance management system serving
 
 The request flow follows a stateless, horizontally scalable architecture:
 
-```
-WhatsApp Citizen Message
-    Meta Cloud API
-        POST /webhook (FastAPI)
-            HMAC Signature Verification
-                Rate Limiting (100 req/min)
-                    Deduplication (30-second window)
-                        State Machine Router
-                            Handler Processing
-                                Supabase Database Operations
-                                    WhatsApp Response Generation
+```mermaid
+flowchart TD
+    A[WhatsApp Message] --> B[Meta Cloud API]
+    B --> C[POST /webhook FastAPI]
+    C --> D[HMAC Signature Verification]
+    D --> E[Rate Limiting 100 req/min]
+    E --> F[30-second Deduplication]
+    F --> G[State Machine Router]
+    G --> H[Handler Processing]
+    H --> I[Supabase Database Operations]
+    I --> J[WhatsApp Response Generation]
 ```
 
 ## Complete State Machine
@@ -69,14 +69,16 @@ WhatsApp voice notes use audio/ogg with opus codec, which Gemini processes nativ
 The escalation system uses a trained GradientBoosting classifier (F1 score: 0.9273) that automatically identifies complaints requiring intervention:
 
 **Escalation Flow**:
-```
-APScheduler (every 30 min) 
-    -> Load unresolved complaints from Supabase
-        -> Compute cluster count (category + location grouping)
-            -> GradientBoosting model prediction
-                -> If escalate: Update status to "escalated"
-                    -> WhatsApp notification to citizen
-                        -> Email alert to department HoD
+```mermaid
+flowchart TD
+    A[APScheduler Every 30 min] --> B[Load Unresolved Complaints from Supabase]
+    B --> C[Compute Cluster Count per Location]
+    C --> D[GradientBoosting ML Model]
+    D --> E{Escalate?}
+    E -->|Yes| F[Update Status to Escalated]
+    F --> G[WhatsApp Alert to Citizen]
+    F --> H[Email to HoD + Department]
+    E -->|No| I[No Action]
 ```
 
 **Model Features**:
